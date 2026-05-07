@@ -1,3 +1,3 @@
 export default function OwnerLayout() {
-  return <div>Owner</div>;
+  return <div style={{ padding: 40 }}>Owner панель — в розробці</div>;
 }
