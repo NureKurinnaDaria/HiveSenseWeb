@@ -21,8 +21,9 @@ export interface Warehouse {
 
 export interface Sensor {
   sensor_id: number;
-  name: string;
+  serial_number: string;
   type: string;
+  is_active: boolean;
   warehouse_id: number;
 }
 

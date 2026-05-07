@@ -28,7 +28,7 @@ const emptyForm: UserForm = {
   email: "",
   password: "",
   full_name: "",
-  role: "EMPLOYEE",
+  role: "worker",
   warehouse_id: "",
 };
 
@@ -74,7 +74,7 @@ export default function UsersPage() {
       email: user.email,
       password: "",
       full_name: user.full_name,
-      role: user.role,
+      role: user.role.toLowerCase(),
       warehouse_id: user.warehouse_id ? String(user.warehouse_id) : "",
     });
     setShowModal(true);
@@ -85,16 +85,24 @@ export default function UsersPage() {
     try {
       const payload = {
         email: form.email,
-        full_name: form.full_name,
-        role: form.role as "EMPLOYEE" | "ADMIN" | "OWNER",
-        warehouse_id: form.warehouse_id ? Number(form.warehouse_id) : null,
+        name: form.full_name,
+        role: form.role as "worker" | "admin" | "owner",
+        is_active: true,
+        warehouse_id: form.warehouse_id ? Number(form.warehouse_id) : undefined,
         ...(form.password ? { password: form.password } : {}),
       };
 
       if (editingUser) {
         await updateUser(editingUser.user_id, payload);
       } else {
-        await createUser({ ...payload, password: form.password });
+        await createUser({
+          email: payload.email,
+          password: form.password,
+          name: payload.name,
+          role: payload.role,
+          is_active: true,
+          warehouse_id: payload.warehouse_id,
+        });
       }
 
       setShowModal(false);
@@ -152,9 +160,9 @@ export default function UsersPage() {
   ];
 
   const roleOptions = [
-    { value: "EMPLOYEE", label: t("roles.EMPLOYEE") },
-    { value: "ADMIN", label: t("roles.ADMIN") },
-    { value: "OWNER", label: t("roles.OWNER") },
+    { value: "worker", label: t("roles.EMPLOYEE") },
+    { value: "admin", label: t("roles.ADMIN") },
+    { value: "owner", label: t("roles.OWNER") },
   ];
 
   const columns = [

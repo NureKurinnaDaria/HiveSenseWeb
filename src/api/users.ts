@@ -14,9 +14,10 @@ export const getAllUsers = async (): Promise<User[]> => {
 export const createUser = async (data: {
   email: string;
   password: string;
-  full_name: string;
+  name: string;
   role: string;
-  warehouse_id?: number | null;
+  is_active: boolean;
+  warehouse_id?: number;
 }): Promise<User> => {
   const res = await client.post<User>("/users", data);
   return res.data;
@@ -24,7 +25,14 @@ export const createUser = async (data: {
 
 export const updateUser = async (
   id: number,
-  data: Partial<User> & { password?: string },
+  data: {
+    email?: string;
+    password?: string;
+    name?: string;
+    role?: string;
+    is_active?: boolean;
+    warehouse_id?: number | null;
+  },
 ): Promise<User> => {
   const res = await client.put<User>(`/users/${id}`, data);
   return res.data;
