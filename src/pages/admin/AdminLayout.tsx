@@ -6,11 +6,9 @@ import type { NavItem } from "../../components/Sidebar";
 import UsersPage from "./UsersPage";
 import SensorsPage from "./SensorsPage";
 import ThresholdsPage from "./ThresholdsPage";
-import WarehousesPage from "./WarehousesPage";
 import AuditPage from "./AuditPage";
 
 const adminNavItems: NavItem[] = [
-  { key: "warehouses", label: "", icon: "🏭" },
   { key: "users", label: "", icon: "👥" },
   { key: "sensors", label: "", icon: "📡" },
   { key: "thresholds", label: "", icon: "⚙️" },
@@ -20,7 +18,7 @@ const adminNavItems: NavItem[] = [
 
 export default function AdminLayout() {
   const { t } = useTranslation();
-  const [activePage, setActivePage] = useState("warehouses");
+  const [activePage, setActivePage] = useState("users");
 
   const labeledItems: NavItem[] = adminNavItems.map((item) => ({
     ...item,
@@ -31,8 +29,6 @@ export default function AdminLayout() {
 
   const renderPage = () => {
     switch (activePage) {
-      case "warehouses":
-        return <WarehousesPage />;
       case "users":
         return <UsersPage />;
       case "sensors":
@@ -42,7 +38,7 @@ export default function AdminLayout() {
       case "audit":
         return <AuditPage />;
       default:
-        return <WarehousesPage />;
+        return <UsersPage />;
     }
   };
 
