@@ -55,13 +55,8 @@ export default function Sidebar({ items, active, onNavigate }: SidebarProps) {
 
       <div className={styles.bottom}>
         <div className={styles.userInfo}>
-          <div className={styles.avatar}>{initials}</div>
-          <div>
-            <div className={styles.userName}>{user?.full_name}</div>
-            <div className={styles.userEmail}>{user?.email}</div>
-          </div>
+          <div className={styles.userName}>{user?.email}</div>
         </div>
-
         <button className={styles.logoutBtn} onClick={logout}>
           <span className={styles.navIcon}>🚪</span>
           {t("nav.logout")}

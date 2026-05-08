@@ -34,7 +34,7 @@ export default function PageLayout({
           <h1 className={styles.headerTitle}>{pageTitle}</h1>
           <div className={styles.headerRight}>
             <button className={styles.langBtn} onClick={toggleLang}>
-              {i18n.language === "uk" ? "🇺🇦 UA" : "🇬🇧 EN"}
+              {i18n.language === "uk" ? "EN" : "UA"}
             </button>
           </div>
         </header>
