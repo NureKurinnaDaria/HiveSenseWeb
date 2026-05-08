@@ -30,8 +30,8 @@ export interface Sensor {
 
 export interface Measurement {
   measurement_id: number;
-  temperature: number;
-  humidity: number;
+  temperature_c: string;
+  humidity_percent: string;
   measured_at: string;
   sensor_id: number;
   sensor?: Sensor;

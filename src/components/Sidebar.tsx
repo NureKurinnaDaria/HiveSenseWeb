@@ -18,15 +18,6 @@ export default function Sidebar({ items, active, onNavigate }: SidebarProps) {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
 
-  const initials = user?.full_name
-    ? user.full_name
-        .split(" ")
-        .map((w) => w[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
-    : "?";
-
   return (
     <aside className={styles.sidebar}>
       <div className={styles.logo}>
