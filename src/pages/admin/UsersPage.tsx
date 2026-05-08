@@ -15,6 +15,7 @@ import Button from "../../components/Button";
 import Modal from "../../components/Modal";
 import FormField from "../../components/FormField";
 import styles from "./UsersPage.module.css";
+import { useAuth } from "../../context/AuthContext";
 
 interface UserForm {
   email: string;
@@ -34,7 +35,7 @@ const emptyForm: UserForm = {
 
 export default function UsersPage() {
   const { t } = useTranslation();
-
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -130,8 +131,8 @@ export default function UsersPage() {
 
   const filtered = users.filter(
     (u) =>
-      u.full_name.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase()),
+      (u.full_name ?? "").toLowerCase().includes(search.toLowerCase()) ||
+      (u.email ?? "").toLowerCase().includes(search.toLowerCase()),
   );
 
   const roleBadge = (role: string) => {
@@ -186,31 +187,54 @@ export default function UsersPage() {
     {
       key: "actions",
       label: t("common.actions"),
-      render: (u: User) => (
-        <div className={styles.actions}>
-          <button
-            className={styles.iconBtn}
-            onClick={() => openEdit(u)}
-            title={t("common.edit")}
-          >
-            ✏️
-          </button>
-          <button
-            className={styles.iconBtn}
-            onClick={() => handleBlock(u)}
-            title={u.is_active ? t("common.block") : t("common.unblock")}
-          >
-            {u.is_active ? "🔒" : "🔓"}
-          </button>
-          <button
-            className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
-            onClick={() => setConfirmDelete(u)}
-            title={t("common.delete")}
-          >
-            🗑️
-          </button>
-        </div>
-      ),
+      render: (u: User) => {
+        if (u.role === "OWNER") {
+          return (
+            <span style={{ color: "var(--gray-400)", fontSize: 13 }}>—</span>
+          );
+        }
+        if (
+          u.user_id === currentUser?.user_id ||
+          u.user_id === (currentUser as any)?.id
+        ) {
+          return (
+            <div className={styles.actions}>
+              <button
+                className={styles.iconBtn}
+                onClick={() => openEdit(u)}
+                title={t("common.edit")}
+              >
+                ✏️
+              </button>
+            </div>
+          );
+        }
+        return (
+          <div className={styles.actions}>
+            <button
+              className={styles.iconBtn}
+              onClick={() => openEdit(u)}
+              title={t("common.edit")}
+            >
+              ✏️
+            </button>
+            <button
+              className={styles.iconBtn}
+              onClick={() => handleBlock(u)}
+              title={u.is_active ? t("common.block") : t("common.unblock")}
+            >
+              {u.is_active ? "🔒" : "🔓"}
+            </button>
+            <button
+              className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
+              onClick={() => setConfirmDelete(u)}
+              title={t("common.delete")}
+            >
+              🗑️
+            </button>
+          </div>
+        );
+      },
     },
   ];
 
@@ -235,7 +259,6 @@ export default function UsersPage() {
         rowKey={(u) => u.user_id}
       />
 
-      {/* Модалка створення / редагування */}
       {showModal && (
         <Modal
           title={editingUser ? t("common.edit") : t("common.create")}
@@ -287,7 +310,6 @@ export default function UsersPage() {
         </Modal>
       )}
 
-      {/* Модалка підтвердження видалення */}
       {confirmDelete && (
         <Modal
           title={t("common.delete")}

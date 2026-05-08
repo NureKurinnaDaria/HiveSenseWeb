@@ -33,10 +33,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = (newToken: string, newUser: User) => {
+    const normalizedUser = {
+      ...newUser,
+      user_id: newUser.user_id ?? (newUser as any).id,
+    };
     localStorage.setItem("access_token", newToken);
-    localStorage.setItem("user", JSON.stringify(newUser));
+    localStorage.setItem("user", JSON.stringify(normalizedUser));
     setToken(newToken);
-    setUser(newUser);
+    setUser(normalizedUser);
   };
 
   const logout = () => {
