@@ -12,7 +12,6 @@ import Table from "../../components/Table";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
 import FormField from "../../components/FormField";
-import styles from "./SensorsPage.module.css";
 
 interface SensorForm {
   serial_number: string;
@@ -27,15 +26,25 @@ const emptyForm: SensorForm = {
   warehouse_id: "",
   is_active: true,
 };
+const iconBtn: React.CSSProperties = {
+  width: 30,
+  height: 30,
+  borderRadius: 6,
+  border: "1.5px solid var(--gray-200)",
+  background: "#fff",
+  fontSize: 14,
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
 
 export default function SensorsPage() {
   const { t } = useTranslation();
-
   const [sensors, setSensors] = useState<Sensor[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-
   const [showModal, setShowModal] = useState(false);
   const [editingSensor, setEditingSensor] = useState<Sensor | null>(null);
   const [form, setForm] = useState<SensorForm>(emptyForm);
@@ -62,14 +71,13 @@ export default function SensorsPage() {
     setForm(emptyForm);
     setShowModal(true);
   };
-
-  const openEdit = (sensor: Sensor) => {
-    setEditingSensor(sensor);
+  const openEdit = (s: Sensor) => {
+    setEditingSensor(s);
     setForm({
-      serial_number: sensor.serial_number,
-      type: sensor.type,
-      warehouse_id: String(sensor.warehouse_id),
-      is_active: sensor.is_active,
+      serial_number: s.serial_number,
+      type: s.type,
+      warehouse_id: String(s.warehouse_id),
+      is_active: s.is_active,
     });
     setShowModal(true);
   };
@@ -83,13 +91,11 @@ export default function SensorsPage() {
         warehouse_id: Number(form.warehouse_id),
         is_active: form.is_active,
       };
-
       if (editingSensor) {
         await updateSensor(editingSensor.sensor_id, payload);
       } else {
         await createSensor(payload);
       }
-
       setShowModal(false);
       await load();
     } finally {
@@ -104,6 +110,9 @@ export default function SensorsPage() {
     await load();
   };
 
+  const getWarehouseName = (id: number) =>
+    warehouses.find((w) => w.warehouse_id === id)?.name ?? "—";
+
   const filtered = sensors.filter(
     (s) =>
       (s.serial_number ?? "").toLowerCase().includes(search.toLowerCase()) ||
@@ -114,9 +123,6 @@ export default function SensorsPage() {
     { value: "", label: "—" },
     ...warehouses.map((w) => ({ value: w.warehouse_id, label: w.name })),
   ];
-
-  const getWarehouseName = (id: number) =>
-    warehouses.find((w) => w.warehouse_id === id)?.name ?? "—";
 
   const columns = [
     { key: "sensor_id", label: "ID" },
@@ -149,16 +155,16 @@ export default function SensorsPage() {
       key: "actions",
       label: t("common.actions"),
       render: (s: Sensor) => (
-        <div className={styles.actions}>
+        <div style={{ display: "flex", gap: 6 }}>
           <button
-            className={styles.iconBtn}
+            style={iconBtn}
             onClick={() => openEdit(s)}
             title={t("common.edit")}
           >
             ✏️
           </button>
           <button
-            className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
+            style={iconBtn}
             onClick={() => setConfirmDelete(s)}
             title={t("common.delete")}
           >
@@ -171,9 +177,22 @@ export default function SensorsPage() {
 
   return (
     <div>
-      <div className={styles.header}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 24,
+        }}
+      >
         <input
-          className={styles.searchInput}
+          style={{
+            padding: "9px 14px",
+            borderRadius: 8,
+            border: "1.5px solid var(--gray-200)",
+            fontSize: 13.5,
+            width: 260,
+          }}
           placeholder={t("common.search")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -242,7 +261,7 @@ export default function SensorsPage() {
             </>
           }
         >
-          <p className={styles.confirmText}>
+          <p style={{ fontSize: 14, color: "var(--gray-700)" }}>
             {t("common.confirm_delete")}{" "}
             <strong>{confirmDelete.serial_number}</strong>?
           </p>

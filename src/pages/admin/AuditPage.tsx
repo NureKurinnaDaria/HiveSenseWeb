@@ -5,11 +5,9 @@ import { getAuditLogs } from "../../api/index";
 import Table from "../../components/Table";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
-import styles from "./AuditPage.module.css";
 
 export default function AuditPage() {
   const { t, i18n } = useTranslation();
-
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterEntity, setFilterEntity] = useState("");
@@ -33,31 +31,41 @@ export default function AuditPage() {
     load();
   }, []);
 
-  const handleSearch = () => {
-    load();
-  };
-
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleString(i18n.language === "uk" ? "uk-UA" : "en-GB", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  const formatDate = (dateStr: string) =>
+    new Date(dateStr).toLocaleString(
+      i18n.language === "uk" ? "uk-UA" : "en-GB",
+      {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      },
+    );
 
   const actionBadge = (action: string) => {
     const lower = action.toLowerCase();
-    const cls = lower.includes("create")
-      ? styles.badgeCreate
+    const colors: [string, string] = lower.includes("create")
+      ? ["var(--green-100)", "var(--green-600)"]
       : lower.includes("update")
-        ? styles.badgeUpdate
+        ? ["var(--blue-100)", "var(--blue-600)"]
         : lower.includes("delete")
-          ? styles.badgeDelete
-          : styles.badgeOther;
-    return <span className={`${styles.badge} ${cls}`}>{action}</span>;
+          ? ["var(--red-100)", "var(--red-600)"]
+          : ["var(--gray-100)", "var(--gray-600)"];
+    return (
+      <span
+        style={{
+          padding: "3px 10px",
+          borderRadius: 20,
+          fontSize: 11,
+          fontWeight: 600,
+          background: colors[0],
+          color: colors[1],
+        }}
+      >
+        {action}
+      </span>
+    );
   };
 
   const exportJSON = () => {
@@ -91,6 +99,14 @@ export default function AuditPage() {
     URL.revokeObjectURL(url);
   };
 
+  const inputStyle: React.CSSProperties = {
+    padding: "9px 14px",
+    borderRadius: 8,
+    border: "1.5px solid var(--gray-200)",
+    fontSize: 13.5,
+    width: 200,
+  };
+
   const columns = [
     { key: "id", label: "ID" },
     { key: "entity", label: "Сутність" },
@@ -110,7 +126,16 @@ export default function AuditPage() {
       label: "Дані",
       render: (l: AuditLog) => (
         <span
-          className={styles.payload}
+          style={{
+            fontSize: 12,
+            color: "var(--gray-500)",
+            cursor: "pointer",
+            maxWidth: 200,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            display: "block",
+          }}
           onClick={() => setSelectedLog(l)}
           title="Натисни для перегляду"
         >
@@ -122,25 +147,34 @@ export default function AuditPage() {
 
   return (
     <div>
-      <div className={styles.header}>
-        <div className={styles.filters}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 24,
+          flexWrap: "wrap",
+          gap: 12,
+        }}
+      >
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <input
-            className={styles.filterInput}
+            style={inputStyle}
             placeholder="Сутність (users, sensors...)"
             value={filterEntity}
             onChange={(e) => setFilterEntity(e.target.value)}
           />
           <input
-            className={styles.filterInput}
+            style={inputStyle}
             placeholder="Дія (create, update...)"
             value={filterAction}
             onChange={(e) => setFilterAction(e.target.value)}
           />
-          <Button variant="secondary" onClick={handleSearch}>
+          <Button variant="secondary" onClick={load}>
             {t("common.search")}
           </Button>
         </div>
-        <div className={styles.exportRow}>
+        <div style={{ display: "flex", gap: 8 }}>
           <Button variant="ghost" icon="📥" onClick={exportCSV}>
             CSV
           </Button>
@@ -162,7 +196,17 @@ export default function AuditPage() {
           title={`Payload — ${selectedLog.entity} / ${selectedLog.action}`}
           onClose={() => setSelectedLog(null)}
         >
-          <pre className={styles.payloadPre}>
+          <pre
+            style={{
+              fontSize: 12,
+              color: "var(--gray-700)",
+              background: "var(--gray-100)",
+              padding: 16,
+              borderRadius: 8,
+              overflow: "auto",
+              maxHeight: 400,
+            }}
+          >
             {JSON.stringify(selectedLog.payload, null, 2)}
           </pre>
         </Modal>

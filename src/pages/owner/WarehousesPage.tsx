@@ -11,7 +11,6 @@ import Table from "../../components/Table";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
 import FormField from "../../components/FormField";
-import styles from "./WarehousesPage.module.css";
 
 interface WarehouseForm {
   name: string;
@@ -19,19 +18,30 @@ interface WarehouseForm {
   status: string;
 }
 
-const emptyForm: WarehouseForm = {
-  name: "",
-  location: "",
-  status: "ACTIVE",
-};
+const emptyForm: WarehouseForm = { name: "", location: "", status: "ACTIVE" };
+
+const badge = (active: boolean, activeLabel: string, inactiveLabel: string) => (
+  <span
+    style={{
+      padding: "3px 10px",
+      borderRadius: 20,
+      fontSize: 11,
+      fontWeight: 600,
+      textTransform: "uppercase",
+      letterSpacing: "0.4px",
+      background: active ? "var(--green-100)" : "var(--gray-100)",
+      color: active ? "var(--green-600)" : "var(--gray-600)",
+    }}
+  >
+    {active ? activeLabel : inactiveLabel}
+  </span>
+);
 
 export default function WarehousesPage() {
   const { t } = useTranslation();
-
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-
   const [showModal, setShowModal] = useState(false);
   const [editingWarehouse, setEditingWarehouse] = useState<Warehouse | null>(
     null,
@@ -43,8 +53,7 @@ export default function WarehousesPage() {
   const load = async () => {
     setLoading(true);
     try {
-      const data = await getAllWarehouses();
-      setWarehouses(data);
+      setWarehouses(await getAllWarehouses());
     } finally {
       setLoading(false);
     }
@@ -59,14 +68,9 @@ export default function WarehousesPage() {
     setForm(emptyForm);
     setShowModal(true);
   };
-
-  const openEdit = (warehouse: Warehouse) => {
-    setEditingWarehouse(warehouse);
-    setForm({
-      name: warehouse.name,
-      location: warehouse.location,
-      status: warehouse.status,
-    });
+  const openEdit = (w: Warehouse) => {
+    setEditingWarehouse(w);
+    setForm({ name: w.name, location: w.location, status: w.status });
     setShowModal(true);
   };
 
@@ -100,22 +104,22 @@ export default function WarehousesPage() {
 
   const filtered = warehouses.filter(
     (w) =>
-      (w.name ?? "").toLowerCase().includes(search.toLowerCase()) ||
-      (w.location ?? "").toLowerCase().includes(search.toLowerCase()),
+      w.name.toLowerCase().includes(search.toLowerCase()) ||
+      w.location.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const statusBadge = (status: string) => (
-    <span
-      className={`${styles.badge} ${status === "ACTIVE" ? styles.badgeActive : styles.badgeInactive}`}
-    >
-      {status === "ACTIVE" ? t("common.active") : t("common.inactive")}
-    </span>
-  );
-
-  const statusOptions = [
-    { value: "ACTIVE", label: t("common.active") },
-    { value: "INACTIVE", label: t("common.inactive") },
-  ];
+  const iconBtn = {
+    width: 30,
+    height: 30,
+    borderRadius: 6,
+    border: "1.5px solid var(--gray-200)",
+    background: "#fff",
+    fontSize: 14,
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  };
 
   const columns = [
     { key: "warehouse_id", label: "ID" },
@@ -124,22 +128,23 @@ export default function WarehousesPage() {
     {
       key: "status",
       label: t("common.status"),
-      render: (w: Warehouse) => statusBadge(w.status),
+      render: (w: Warehouse) =>
+        badge(w.status === "ACTIVE", t("common.active"), t("common.inactive")),
     },
     {
       key: "actions",
       label: t("common.actions"),
       render: (w: Warehouse) => (
-        <div className={styles.actions}>
+        <div style={{ display: "flex", gap: 6 }}>
           <button
-            className={styles.iconBtn}
+            style={iconBtn}
             onClick={() => openEdit(w)}
             title={t("common.edit")}
           >
             ✏️
           </button>
           <button
-            className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
+            style={iconBtn}
             onClick={() => setConfirmDelete(w)}
             title={t("common.delete")}
           >
@@ -150,11 +155,29 @@ export default function WarehousesPage() {
     },
   ];
 
+  const statusOptions = [
+    { value: "ACTIVE", label: t("common.active") },
+    { value: "INACTIVE", label: t("common.inactive") },
+  ];
+
   return (
     <div>
-      <div className={styles.header}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 24,
+        }}
+      >
         <input
-          className={styles.searchInput}
+          style={{
+            padding: "9px 14px",
+            borderRadius: 8,
+            border: "1.5px solid var(--gray-200)",
+            fontSize: 13.5,
+            width: 260,
+          }}
           placeholder={t("common.search")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -222,7 +245,7 @@ export default function WarehousesPage() {
             </>
           }
         >
-          <p className={styles.confirmText}>
+          <p style={{ fontSize: 14, color: "var(--gray-700)" }}>
             {t("common.confirm_delete")} <strong>{confirmDelete.name}</strong>?
           </p>
         </Modal>

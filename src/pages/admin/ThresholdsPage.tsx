@@ -12,7 +12,6 @@ import Table from "../../components/Table";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
 import FormField from "../../components/FormField";
-import styles from "./ThresholdsPage.module.css";
 
 interface ThresholdForm {
   warehouse_id: string;
@@ -29,14 +28,24 @@ const emptyForm: ThresholdForm = {
   humidity_min: "",
   humidity_max: "",
 };
+const iconBtn: React.CSSProperties = {
+  width: 30,
+  height: 30,
+  borderRadius: 6,
+  border: "1.5px solid var(--gray-200)",
+  background: "#fff",
+  fontSize: 14,
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
 
 export default function ThresholdsPage() {
   const { t } = useTranslation();
-
   const [thresholds, setThresholds] = useState<Threshold[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
-
   const [showModal, setShowModal] = useState(false);
   const [editingThreshold, setEditingThreshold] = useState<Threshold | null>(
     null,
@@ -68,15 +77,14 @@ export default function ThresholdsPage() {
     setForm(emptyForm);
     setShowModal(true);
   };
-
-  const openEdit = (threshold: Threshold) => {
-    setEditingThreshold(threshold);
+  const openEdit = (th: Threshold) => {
+    setEditingThreshold(th);
     setForm({
-      warehouse_id: String(threshold.warehouse_id),
-      temp_min: String(threshold.temp_min),
-      temp_max: String(threshold.temp_max),
-      humidity_min: String(threshold.humidity_min),
-      humidity_max: String(threshold.humidity_max),
+      warehouse_id: String(th.warehouse_id),
+      temp_min: String(th.temp_min),
+      temp_max: String(th.temp_max),
+      humidity_min: String(th.humidity_min),
+      humidity_max: String(th.humidity_max),
     });
     setShowModal(true);
   };
@@ -91,13 +99,11 @@ export default function ThresholdsPage() {
         humidity_max: Number(form.humidity_max),
         warehouse_id: Number(form.warehouse_id),
       };
-
       if (editingThreshold) {
         await updateThreshold(editingThreshold.warehouse_id, payload);
       } else {
         await createThreshold(payload);
       }
-
       setShowModal(false);
       await load();
     } finally {
@@ -114,11 +120,18 @@ export default function ThresholdsPage() {
 
   const getWarehouseName = (id: number) =>
     warehouses.find((w) => w.warehouse_id === id)?.name ?? "—";
-
   const warehouseOptions = [
     { value: "", label: "—" },
     ...warehouses.map((w) => ({ value: w.warehouse_id, label: w.name })),
   ];
+
+  const rangeCell = (min: number, max: number) => (
+    <span>
+      <span style={{ fontWeight: 600, color: "var(--gray-900)" }}>{min}</span>
+      {" — "}
+      <span style={{ fontWeight: 600, color: "var(--gray-900)" }}>{max}</span>
+    </span>
+  );
 
   const columns = [
     {
@@ -129,39 +142,27 @@ export default function ThresholdsPage() {
     {
       key: "temperature",
       label: "Температура (°C)",
-      render: (th: Threshold) => (
-        <span className={styles.rangeCell}>
-          <span className={styles.rangeValue}>{th.temp_min}</span>
-          {" — "}
-          <span className={styles.rangeValue}>{th.temp_max}</span>
-        </span>
-      ),
+      render: (th: Threshold) => rangeCell(th.temp_min, th.temp_max),
     },
     {
       key: "humidity",
       label: "Вологість (%)",
-      render: (th: Threshold) => (
-        <span className={styles.rangeCell}>
-          <span className={styles.rangeValue}>{th.humidity_min}</span>
-          {" — "}
-          <span className={styles.rangeValue}>{th.humidity_max}</span>
-        </span>
-      ),
+      render: (th: Threshold) => rangeCell(th.humidity_min, th.humidity_max),
     },
     {
       key: "actions",
       label: t("common.actions"),
       render: (th: Threshold) => (
-        <div className={styles.actions}>
+        <div style={{ display: "flex", gap: 6 }}>
           <button
-            className={styles.iconBtn}
+            style={iconBtn}
             onClick={() => openEdit(th)}
             title={t("common.edit")}
           >
             ✏️
           </button>
           <button
-            className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
+            style={iconBtn}
             onClick={() => setConfirmDelete(th)}
             title={t("common.delete")}
           >
@@ -174,7 +175,14 @@ export default function ThresholdsPage() {
 
   return (
     <div>
-      <div className={styles.header}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 24,
+        }}
+      >
         <span style={{ fontSize: 14, color: "var(--gray-500)" }}>
           Порогові значення температури та вологості для кожного складу
         </span>
@@ -260,7 +268,7 @@ export default function ThresholdsPage() {
             </>
           }
         >
-          <p className={styles.confirmText}>
+          <p style={{ fontSize: 14, color: "var(--gray-700)" }}>
             {t("common.confirm_delete")} порогові значення для складу{" "}
             <strong>{getWarehouseName(confirmDelete.warehouse_id)}</strong>?
           </p>

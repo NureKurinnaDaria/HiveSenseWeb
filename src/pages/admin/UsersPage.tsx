@@ -14,7 +14,6 @@ import Table from "../../components/Table";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
 import FormField from "../../components/FormField";
-import styles from "./UsersPage.module.css";
 import { useAuth } from "../../context/AuthContext";
 
 interface UserForm {
@@ -33,6 +32,19 @@ const emptyForm: UserForm = {
   warehouse_id: "",
 };
 
+const iconBtn: React.CSSProperties = {
+  width: 30,
+  height: 30,
+  borderRadius: 6,
+  border: "1.5px solid var(--gray-200)",
+  background: "#fff",
+  fontSize: 14,
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
+
 export default function UsersPage() {
   const { t } = useTranslation();
   const { user: currentUser } = useAuth();
@@ -40,11 +52,9 @@ export default function UsersPage() {
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [form, setForm] = useState<UserForm>(emptyForm);
-
   const [confirmDelete, setConfirmDelete] = useState<User | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -68,7 +78,6 @@ export default function UsersPage() {
     setForm(emptyForm);
     setShowModal(true);
   };
-
   const openEdit = (user: User) => {
     setEditingUser(user);
     setForm({
@@ -92,7 +101,6 @@ export default function UsersPage() {
         warehouse_id: form.warehouse_id ? Number(form.warehouse_id) : undefined,
         ...(form.password ? { password: form.password } : {}),
       };
-
       if (editingUser) {
         await updateUser(editingUser.user_id, payload);
       } else {
@@ -105,7 +113,6 @@ export default function UsersPage() {
           warehouse_id: payload.warehouse_id,
         });
       }
-
       setShowModal(false);
       await load();
     } finally {
@@ -114,11 +121,9 @@ export default function UsersPage() {
   };
 
   const handleBlock = async (user: User) => {
-    if (user.is_active) {
-      await blockUser(user.user_id);
-    } else {
-      await unblockUser(user.user_id);
-    }
+    user.is_active
+      ? await blockUser(user.user_id)
+      : await unblockUser(user.user_id);
     await load();
   };
 
@@ -136,20 +141,40 @@ export default function UsersPage() {
   );
 
   const roleBadge = (role: string) => {
-    const cls =
-      role === "ADMIN"
-        ? styles.badgeAdmin
-        : role === "OWNER"
-          ? styles.badgeOwner
-          : styles.badgeEmployee;
+    const colors: Record<string, [string, string]> = {
+      ADMIN: ["var(--amber-100)", "var(--amber-700)"],
+      OWNER: ["var(--blue-100)", "var(--blue-600)"],
+      EMPLOYEE: ["var(--gray-100)", "var(--gray-600)"],
+    };
+    const [bg, color] = colors[role] ?? ["var(--gray-100)", "var(--gray-600)"];
     return (
-      <span className={`${styles.badge} ${cls}`}>{t(`roles.${role}`)}</span>
+      <span
+        style={{
+          padding: "3px 10px",
+          borderRadius: 20,
+          fontSize: 11,
+          fontWeight: 600,
+          textTransform: "uppercase",
+          background: bg,
+          color,
+        }}
+      >
+        {t(`roles.${role}`)}
+      </span>
     );
   };
 
   const statusBadge = (isActive: boolean) => (
     <span
-      className={`${styles.badge} ${isActive ? styles.badgeActive : styles.badgeBlocked}`}
+      style={{
+        padding: "3px 10px",
+        borderRadius: 20,
+        fontSize: 11,
+        fontWeight: 600,
+        textTransform: "uppercase",
+        background: isActive ? "var(--green-100)" : "var(--red-100)",
+        color: isActive ? "var(--green-600)" : "var(--red-600)",
+      }}
     >
       {isActive ? t("common.active") : t("common.blocked")}
     </span>
@@ -159,7 +184,6 @@ export default function UsersPage() {
     { value: "", label: "—" },
     ...warehouses.map((w) => ({ value: w.warehouse_id, label: w.name })),
   ];
-
   const roleOptions = [
     { value: "worker", label: t("roles.EMPLOYEE") },
     { value: "admin", label: t("roles.ADMIN") },
@@ -167,8 +191,8 @@ export default function UsersPage() {
   ];
 
   const columns = [
-    { key: "full_name", label: t("common.name") },
-    { key: "email", label: t("common.email") },
+    { key: "full_name", label: "Ім'я" },
+    { key: "email", label: "Email" },
     {
       key: "role",
       label: t("common.role"),
@@ -188,50 +212,40 @@ export default function UsersPage() {
       key: "actions",
       label: t("common.actions"),
       render: (u: User) => {
-        if (u.role === "OWNER") {
+        if (u.role === "OWNER")
           return (
             <span style={{ color: "var(--gray-400)", fontSize: 13 }}>—</span>
           );
-        }
-        if (
+        const isSelf =
           u.user_id === currentUser?.user_id ||
-          u.user_id === (currentUser as any)?.id
-        ) {
-          return (
-            <div className={styles.actions}>
-              <button
-                className={styles.iconBtn}
-                onClick={() => openEdit(u)}
-                title={t("common.edit")}
-              >
-                ✏️
-              </button>
-            </div>
-          );
-        }
+          u.user_id === (currentUser as any)?.id;
         return (
-          <div className={styles.actions}>
+          <div style={{ display: "flex", gap: 6 }}>
             <button
-              className={styles.iconBtn}
+              style={iconBtn}
               onClick={() => openEdit(u)}
               title={t("common.edit")}
             >
               ✏️
             </button>
-            <button
-              className={styles.iconBtn}
-              onClick={() => handleBlock(u)}
-              title={u.is_active ? t("common.block") : t("common.unblock")}
-            >
-              {u.is_active ? "🔒" : "🔓"}
-            </button>
-            <button
-              className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
-              onClick={() => setConfirmDelete(u)}
-              title={t("common.delete")}
-            >
-              🗑️
-            </button>
+            {!isSelf && (
+              <button
+                style={iconBtn}
+                onClick={() => handleBlock(u)}
+                title={u.is_active ? t("common.block") : t("common.unblock")}
+              >
+                {u.is_active ? "🔒" : "🔓"}
+              </button>
+            )}
+            {!isSelf && (
+              <button
+                style={iconBtn}
+                onClick={() => setConfirmDelete(u)}
+                title={t("common.delete")}
+              >
+                🗑️
+              </button>
+            )}
           </div>
         );
       },
@@ -240,9 +254,22 @@ export default function UsersPage() {
 
   return (
     <div>
-      <div className={styles.header}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 24,
+        }}
+      >
         <input
-          className={styles.searchInput}
+          style={{
+            padding: "9px 14px",
+            borderRadius: 8,
+            border: "1.5px solid var(--gray-200)",
+            fontSize: 13.5,
+            width: 260,
+          }}
           placeholder={t("common.search")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -275,13 +302,13 @@ export default function UsersPage() {
           }
         >
           <FormField
-            label={t("common.name")}
+            label="Ім'я"
             value={form.full_name}
             onChange={(v) => setForm((f) => ({ ...f, full_name: v }))}
             required
           />
           <FormField
-            label={t("common.email")}
+            label="Email"
             type="email"
             value={form.email}
             onChange={(v) => setForm((f) => ({ ...f, email: v }))}
@@ -325,7 +352,7 @@ export default function UsersPage() {
             </>
           }
         >
-          <p className={styles.confirmText}>
+          <p style={{ fontSize: 14, color: "var(--gray-700)" }}>
             {t("common.confirm_delete")}{" "}
             <strong>{confirmDelete.full_name}</strong>?
           </p>

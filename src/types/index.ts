@@ -52,8 +52,8 @@ export interface HoneyBatch {
   batch_id: number;
   variety: string;
   quantity_kg: number;
-  received_at: string;
-  expiry_date: string;
+  received_date: string;
+  expiration_date: string;
   status: "ACTIVE" | "EXPIRED" | "SOLD";
   warehouse_id: number;
 }
