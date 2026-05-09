@@ -1,40 +1,26 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { Warehouse } from "../../types";
+import type { Warehouse, Measurement, Alert, HoneyBatch } from "../../types";
 import { getAllWarehouses } from "../../api/warehouses";
-import { getWarehouseSummary } from "../../api/index";
+import { getMeasurements, getAlerts, getHoneyBatches } from "../../api/index";
 import Button from "../../components/Button";
-
-interface Summary {
-  warehouse: {
-    warehouse_id: number;
-    name: string;
-    location: string;
-    status: string;
-  };
-  sensor_count: number;
-  active_alerts: number;
-  honey_batches: number;
-  total_honey_kg: number;
-  latest_measurement?: {
-    temperature_c: string;
-    humidity_percent: string;
-    measured_at: string;
-  };
-  threshold?: {
-    temp_min: number;
-    temp_max: number;
-    humidity_min: number;
-    humidity_max: number;
-  };
-}
+import Table from "../../components/Table";
 
 export default function ReportsPage() {
   const { i18n } = useTranslation();
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
-  const [summary, setSummary] = useState<Summary | null>(null);
+  const [measurements, setMeasurements] = useState<Measurement[]>([]);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [batches, setBatches] = useState<HoneyBatch[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const today = new Date().toISOString().slice(0, 10);
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+  const [dateFrom, setDateFrom] = useState(weekAgo);
+  const [dateTo, setDateTo] = useState(today);
 
   useEffect(() => {
     getAllWarehouses().then((w) => {
@@ -46,37 +32,251 @@ export default function ReportsPage() {
   useEffect(() => {
     if (!selected) return;
     setLoading(true);
-    getWarehouseSummary(selected)
-      .then(setSummary)
+    Promise.all([
+      getMeasurements(selected),
+      getAlerts(selected),
+      getHoneyBatches(selected),
+    ])
+      .then(([m, a, b]) => {
+        setMeasurements(m);
+        setAlerts(a);
+        setBatches(b);
+      })
       .finally(() => setLoading(false));
   }, [selected]);
+
+  const inRange = (dateStr: string) => {
+    const d = dateStr?.slice(0, 10);
+    return d >= dateFrom && d <= dateTo;
+  };
+
+  const filteredMeasurements = measurements.filter((m) =>
+    inRange(m.measured_at),
+  );
+  const filteredAlerts = alerts.filter((a) => inRange(a.created_at));
+  const filteredBatches = batches.filter((b) => inRange(b.received_date));
 
   const formatDate = (dateStr: string) =>
     new Date(dateStr).toLocaleString(
       i18n.language === "uk" ? "uk-UA" : "en-GB",
     );
 
+  const formatDateShort = (dateStr: string) =>
+    dateStr
+      ? new Date(dateStr).toLocaleDateString(
+          i18n.language === "uk" ? "uk-UA" : "en-GB",
+        )
+      : "—";
+
+  const temps = filteredMeasurements.map((m) => Number(m.temperature_c));
+  const humids = filteredMeasurements.map((m) => Number(m.humidity_percent));
+
+  const avg = (arr: number[]) =>
+    arr.length ? (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(2) : "—";
+  const min = (arr: number[]) =>
+    arr.length ? Math.min(...arr).toFixed(2) : "—";
+  const max = (arr: number[]) =>
+    arr.length ? Math.max(...arr).toFixed(2) : "—";
+
   const exportJSON = () => {
-    if (!summary) return;
-    const blob = new Blob([JSON.stringify(summary, null, 2)], {
+    const data = {
+      period: { from: dateFrom, to: dateTo },
+      warehouse_id: selected,
+      measurements: filteredMeasurements,
+      alerts: filteredAlerts,
+      batches: filteredBatches,
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
       type: "application/json",
     });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `report-warehouse-${selected}-${Date.now()}.json`;
+    a.download = `report-${selected}-${dateFrom}-${dateTo}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
+  const exportCSV = () => {
+    const headers = ["Дата", "Температура (°C)", "Вологість (%)"];
+    const rows = filteredMeasurements.map((m) => [
+      formatDate(m.measured_at),
+      m.temperature_c,
+      m.humidity_percent,
+    ]);
+    const csv = [headers, ...rows].map((r) => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `measurements-${selected}-${dateFrom}-${dateTo}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const statCard = (label: string, value: React.ReactNode, icon: string) => (
+    <div
+      style={{
+        background: "#fff",
+        borderRadius: 12,
+        padding: "16px 20px",
+        border: "1.5px solid var(--gray-200)",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+      }}
+    >
+      <div style={{ fontSize: 20, marginBottom: 6 }}>{icon}</div>
+      <div style={{ fontSize: 22, fontWeight: 700, color: "var(--amber-700)" }}>
+        {value}
+      </div>
+      <div style={{ fontSize: 12, color: "var(--gray-500)", marginTop: 2 }}>
+        {label}
+      </div>
+    </div>
+  );
+
+  const measurementColumns = [
+    {
+      key: "measured_at",
+      label: "Дата",
+      render: (m: Measurement) => formatDate(m.measured_at),
+    },
+    { key: "temperature_c", label: "Температура (°C)" },
+    { key: "humidity_percent", label: "Вологість (%)" },
+    {
+      key: "sensor_id",
+      label: "Датчик",
+      render: (m: Measurement) => `#${m.sensor_id}`,
+    },
+  ];
+
+  const alertColumns = [
+    { key: "alert_id", label: "ID" },
+    { key: "type", label: "Тип" },
+    {
+      key: "status",
+      label: "Статус",
+      render: (a: Alert) => {
+        const colors: Record<string, [string, string]> = {
+          NEW: ["var(--amber-100)", "var(--amber-700)"],
+          RESOLVED: ["var(--green-100)", "var(--green-600)"],
+          ACKNOWLEDGED: ["var(--blue-100)", "var(--blue-600)"],
+        };
+        const [bg, color] = colors[a.status] ?? [
+          "var(--gray-100)",
+          "var(--gray-600)",
+        ];
+        return (
+          <span
+            style={{
+              padding: "2px 8px",
+              borderRadius: 20,
+              fontSize: 11,
+              fontWeight: 600,
+              background: bg,
+              color,
+            }}
+          >
+            {a.status}
+          </span>
+        );
+      },
+    },
+    {
+      key: "created_at",
+      label: "Створено",
+      render: (a: Alert) => formatDate(a.created_at),
+    },
+  ];
+
+  const batchColumns = [
+    { key: "variety", label: "Сорт" },
+    { key: "quantity_kg", label: "Кількість (кг)" },
+    {
+      key: "received_date",
+      label: "Надходження",
+      render: (b: HoneyBatch) => formatDateShort(b.received_date),
+    },
+    {
+      key: "expiration_date",
+      label: "Придатність",
+      render: (b: HoneyBatch) => formatDateShort(b.expiration_date),
+    },
+    {
+      key: "status",
+      label: "Статус",
+      render: (b: HoneyBatch) => {
+        const colors: Record<string, [string, string]> = {
+          ACTIVE: ["var(--green-100)", "var(--green-600)"],
+          EXPIRED: ["var(--red-100)", "var(--red-600)"],
+          SOLD: ["var(--blue-100)", "var(--blue-600)"],
+        };
+        const [bg, color] = colors[b.status] ?? [
+          "var(--gray-100)",
+          "var(--gray-600)",
+        ];
+        return (
+          <span
+            style={{
+              padding: "2px 8px",
+              borderRadius: 20,
+              fontSize: 11,
+              fontWeight: 600,
+              background: bg,
+              color,
+            }}
+          >
+            {b.status}
+          </span>
+        );
+      },
+    },
+  ];
+
+  const sectionTitle = (title: string, count: number) => (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        margin: "28px 0 14px",
+      }}
+    >
+      <h2
+        style={{
+          fontFamily: "var(--font-display)",
+          fontSize: 15,
+          fontWeight: 700,
+          color: "var(--gray-900)",
+          margin: 0,
+        }}
+      >
+        {title}
+      </h2>
+      <span
+        style={{
+          padding: "2px 8px",
+          borderRadius: 20,
+          fontSize: 11,
+          fontWeight: 600,
+          background: "var(--amber-100)",
+          color: "var(--amber-700)",
+        }}
+      >
+        {count}
+      </span>
+    </div>
+  );
+
   return (
     <div>
+      {/* Фільтри */}
       <div
         style={{
           display: "flex",
           gap: 12,
           alignItems: "center",
           marginBottom: 24,
+          flexWrap: "wrap",
         }}
       >
         <select
@@ -95,11 +295,44 @@ export default function ReportsPage() {
             </option>
           ))}
         </select>
+
+        <input
+          type="date"
+          style={{
+            padding: "9px 14px",
+            borderRadius: 8,
+            border: "1.5px solid var(--gray-200)",
+            fontSize: 13.5,
+          }}
+          value={dateFrom}
+          onChange={(e) => setDateFrom(e.target.value)}
+        />
+        <span style={{ color: "var(--gray-400)", fontSize: 13 }}>—</span>
+        <input
+          type="date"
+          style={{
+            padding: "9px 14px",
+            borderRadius: 8,
+            border: "1.5px solid var(--gray-200)",
+            fontSize: 13.5,
+          }}
+          value={dateTo}
+          onChange={(e) => setDateTo(e.target.value)}
+        />
+
+        <Button
+          variant="ghost"
+          icon="📥"
+          onClick={exportCSV}
+          disabled={!filteredMeasurements.length}
+        >
+          CSV
+        </Button>
         <Button
           variant="ghost"
           icon="📥"
           onClick={exportJSON}
-          disabled={!summary}
+          disabled={!selected}
         >
           JSON
         </Button>
@@ -107,166 +340,89 @@ export default function ReportsPage() {
 
       {loading && <p style={{ color: "var(--gray-500)" }}>Завантаження...</p>}
 
-      {summary && !loading && (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-            gap: 16,
-          }}
-        >
-          {[
-            { label: "Датчики", value: summary.sensor_count, icon: "📡" },
-            {
-              label: "Активні тривоги",
-              value: summary.active_alerts,
-              icon: "🚨",
-            },
-            { label: "Партій меду", value: summary.honey_batches, icon: "🍯" },
-            { label: "Мед (кг)", value: summary.total_honey_kg, icon: "⚖️" },
-          ].map((card) => (
-            <div
-              key={card.label}
-              style={{
-                background: "#fff",
-                borderRadius: 12,
-                padding: "20px 24px",
-                border: "1.5px solid var(--gray-200)",
-                boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-              }}
-            >
-              <div style={{ fontSize: 28, marginBottom: 8 }}>{card.icon}</div>
-              <div
-                style={{
-                  fontSize: 28,
-                  fontWeight: 700,
-                  color: "var(--amber-700)",
-                }}
-              >
-                {card.value}
-              </div>
-              <div
-                style={{ fontSize: 13, color: "var(--gray-500)", marginTop: 4 }}
-              >
-                {card.label}
-              </div>
-            </div>
-          ))}
+      {!loading && selected && (
+        <>
+          {/* Статистика вимірів */}
+          {sectionTitle("Виміри", filteredMeasurements.length)}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+              gap: 12,
+            }}
+          >
+            {statCard(
+              "Сер. температура",
+              temps.length ? `${avg(temps)}°C` : "—",
+              "🌡️",
+            )}
+            {statCard(
+              "Мін. температура",
+              temps.length ? `${min(temps)}°C` : "—",
+              "🔽",
+            )}
+            {statCard(
+              "Макс. температура",
+              temps.length ? `${max(temps)}°C` : "—",
+              "🔼",
+            )}
+            {statCard(
+              "Сер. вологість",
+              humids.length ? `${avg(humids)}%` : "—",
+              "💧",
+            )}
+            {statCard(
+              "Мін. вологість",
+              humids.length ? `${min(humids)}%` : "—",
+              "🔽",
+            )}
+            {statCard(
+              "Макс. вологість",
+              humids.length ? `${max(humids)}%` : "—",
+              "🔼",
+            )}
+          </div>
 
-          {summary.latest_measurement && (
-            <div
-              style={{
-                background: "#fff",
-                borderRadius: 12,
-                padding: "20px 24px",
-                border: "1.5px solid var(--gray-200)",
-                boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-                gridColumn: "span 2",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: "var(--gray-500)",
-                  marginBottom: 12,
-                }}
-              >
-                ОСТАННІЙ ВИМІР —{" "}
-                {formatDate(summary.latest_measurement.measured_at)}
-              </div>
-              <div style={{ display: "flex", gap: 32 }}>
-                <div>
-                  <div
-                    style={{
-                      fontSize: 24,
-                      fontWeight: 700,
-                      color: "var(--amber-700)",
-                    }}
-                  >
-                    {summary.latest_measurement.temperature_c}°C
-                  </div>
-                  <div style={{ fontSize: 12, color: "var(--gray-500)" }}>
-                    Температура
-                  </div>
-                </div>
-                <div>
-                  <div
-                    style={{
-                      fontSize: 24,
-                      fontWeight: 700,
-                      color: "var(--amber-700)",
-                    }}
-                  >
-                    {summary.latest_measurement.humidity_percent}%
-                  </div>
-                  <div style={{ fontSize: 12, color: "var(--gray-500)" }}>
-                    Вологість
-                  </div>
-                </div>
-              </div>
-            </div>
+          {/* Таблиця вимірів */}
+          <div style={{ marginTop: 16 }}>
+            <Table
+              columns={measurementColumns}
+              data={filteredMeasurements}
+              loading={false}
+              rowKey={(m) => m.measurement_id}
+            />
+          </div>
+
+          {/* Тривоги */}
+          {sectionTitle("Тривоги за період", filteredAlerts.length)}
+          {filteredAlerts.length > 0 ? (
+            <Table
+              columns={alertColumns}
+              data={filteredAlerts}
+              loading={false}
+              rowKey={(a) => a.alert_id}
+            />
+          ) : (
+            <p style={{ fontSize: 13, color: "var(--gray-400)" }}>
+              Тривог за цей період не було
+            </p>
           )}
 
-          {summary.threshold && (
-            <div
-              style={{
-                background: "#fff",
-                borderRadius: 12,
-                padding: "20px 24px",
-                border: "1.5px solid var(--gray-200)",
-                boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-                gridColumn: "span 2",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: "var(--gray-500)",
-                  marginBottom: 12,
-                }}
-              >
-                ПОРОГОВІ ЗНАЧЕННЯ
-              </div>
-              <div style={{ display: "flex", gap: 32, flexWrap: "wrap" }}>
-                {[
-                  {
-                    label: "Темп. мін",
-                    value: `${summary.threshold.temp_min}°C`,
-                  },
-                  {
-                    label: "Темп. макс",
-                    value: `${summary.threshold.temp_max}°C`,
-                  },
-                  {
-                    label: "Волог. мін",
-                    value: `${summary.threshold.humidity_min}%`,
-                  },
-                  {
-                    label: "Волог. макс",
-                    value: `${summary.threshold.humidity_max}%`,
-                  },
-                ].map((item) => (
-                  <div key={item.label}>
-                    <div
-                      style={{
-                        fontSize: 20,
-                        fontWeight: 700,
-                        color: "var(--gray-800)",
-                      }}
-                    >
-                      {item.value}
-                    </div>
-                    <div style={{ fontSize: 12, color: "var(--gray-500)" }}>
-                      {item.label}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+          {/* Партії меду */}
+          {sectionTitle("Партії меду що надійшли", filteredBatches.length)}
+          {filteredBatches.length > 0 ? (
+            <Table
+              columns={batchColumns}
+              data={filteredBatches}
+              loading={false}
+              rowKey={(b) => b.batch_id}
+            />
+          ) : (
+            <p style={{ fontSize: 13, color: "var(--gray-400)" }}>
+              Партій за цей період не надходило
+            </p>
           )}
-        </div>
+        </>
       )}
     </div>
   );
