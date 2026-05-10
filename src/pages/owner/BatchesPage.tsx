@@ -158,13 +158,13 @@ export default function BatchesPage() {
 
   const exportCSV = () => {
     const headers = [
-      "ID",
-      "Сорт",
-      "Кількість (кг)",
-      "Надходження",
-      "Придатність",
-      "Статус",
-      "Склад",
+      t("batch.batch_id"),
+      t("batch.variety"),
+      t("batch.quantity"),
+      t("batch.received"),
+      t("batch.expiry"),
+      t("batch.status"),
+      t("common.warehouse"),
     ];
     const rows = batches.map((b) => [
       b.batch_id,
@@ -200,7 +200,7 @@ export default function BatchesPage() {
   ];
 
   const columns = [
-    { key: "batch_id", label: "ID" },
+    { key: "batch_id", label: t("batch.batch_id") },
     { key: "variety", label: t("batch.variety") },
     { key: "quantity_kg", label: t("batch.quantity") },
     {
@@ -220,7 +220,7 @@ export default function BatchesPage() {
     },
     {
       key: "warehouse_id",
-      label: "Склад",
+      label: t("common.warehouse"),
       render: (b: HoneyBatch) => getWarehouseName(b.warehouse_id),
     },
     {
@@ -335,7 +335,7 @@ export default function BatchesPage() {
             options={statusOptions}
           />
           <FormField
-            label="Склад"
+            label={t("common.warehouse")}
             value={form.warehouse_id}
             onChange={(v) => setForm((f) => ({ ...f, warehouse_id: v }))}
             options={warehouseOptions}

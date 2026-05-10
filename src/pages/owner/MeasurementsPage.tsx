@@ -7,7 +7,7 @@ import Table from "../../components/Table";
 import Button from "../../components/Button";
 
 export default function MeasurementsPage() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,10 +51,10 @@ export default function MeasurementsPage() {
   const exportCSV = () => {
     const headers = [
       "ID",
-      "Температура (°C)",
-      "Вологість (%)",
-      "Датчик",
-      "Дата виміру",
+      `${t("dashboard.temperature")} (°C)`,
+      `${t("dashboard.humidity")} (%)`,
+      t("common.sensor"),
+      t("common.date"),
     ];
     const rows = filtered.map((m) => [
       m.measurement_id,
@@ -75,21 +75,21 @@ export default function MeasurementsPage() {
 
   const columns = [
     { key: "measurement_id", label: "ID" },
-    { key: "temperature_c", label: "Температура (°C)" },
-    { key: "humidity_percent", label: "Вологість (%)" },
+    { key: "temperature_c", label: `${t("dashboard.temperature")} (°C)` },
+    { key: "humidity_percent", label: `${t("dashboard.humidity")} (%)` },
     {
       key: "sensor_id",
-      label: "Датчик",
+      label: t("common.sensor"),
       render: (m: Measurement) => `#${m.sensor_id}`,
     },
     {
       key: "warehouse",
-      label: "Склад",
+      label: t("common.warehouse"),
       render: (m: Measurement) => getSensorWarehouse(m.sensor_id),
     },
     {
       key: "measured_at",
-      label: "Дата виміру",
+      label: t("common.date"),
       render: (m: Measurement) => formatDate(m.measured_at),
     },
   ];
@@ -114,7 +114,7 @@ export default function MeasurementsPage() {
           value={filterWarehouse}
           onChange={(e) => setFilterWarehouse(e.target.value)}
         >
-          <option value="">Всі склади</option>
+          <option value="">{t("common.all_warehouses")}</option>
           {warehouses.map((w) => (
             <option key={w.warehouse_id} value={w.warehouse_id}>
               {w.name}

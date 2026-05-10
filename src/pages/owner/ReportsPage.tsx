@@ -7,7 +7,7 @@ import Button from "../../components/Button";
 import Table from "../../components/Table";
 
 export default function ReportsPage() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
@@ -70,7 +70,6 @@ export default function ReportsPage() {
 
   const temps = filteredMeasurements.map((m) => Number(m.temperature_c));
   const humids = filteredMeasurements.map((m) => Number(m.humidity_percent));
-
   const avg = (arr: number[]) =>
     arr.length ? (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(2) : "—";
   const min = (arr: number[]) =>
@@ -98,7 +97,11 @@ export default function ReportsPage() {
   };
 
   const exportCSV = () => {
-    const headers = ["Дата", "Температура (°C)", "Вологість (%)"];
+    const headers = [
+      t("reports.measurements"),
+      t("dashboard.temperature"),
+      t("dashboard.humidity"),
+    ];
     const rows = filteredMeasurements.map((m) => [
       formatDate(m.measured_at),
       m.temperature_c,
@@ -133,104 +136,6 @@ export default function ReportsPage() {
       </div>
     </div>
   );
-
-  const measurementColumns = [
-    {
-      key: "measured_at",
-      label: "Дата",
-      render: (m: Measurement) => formatDate(m.measured_at),
-    },
-    { key: "temperature_c", label: "Температура (°C)" },
-    { key: "humidity_percent", label: "Вологість (%)" },
-    {
-      key: "sensor_id",
-      label: "Датчик",
-      render: (m: Measurement) => `#${m.sensor_id}`,
-    },
-  ];
-
-  const alertColumns = [
-    { key: "alert_id", label: "ID" },
-    { key: "type", label: "Тип" },
-    {
-      key: "status",
-      label: "Статус",
-      render: (a: Alert) => {
-        const colors: Record<string, [string, string]> = {
-          NEW: ["var(--amber-100)", "var(--amber-700)"],
-          RESOLVED: ["var(--green-100)", "var(--green-600)"],
-          ACKNOWLEDGED: ["var(--blue-100)", "var(--blue-600)"],
-        };
-        const [bg, color] = colors[a.status] ?? [
-          "var(--gray-100)",
-          "var(--gray-600)",
-        ];
-        return (
-          <span
-            style={{
-              padding: "2px 8px",
-              borderRadius: 20,
-              fontSize: 11,
-              fontWeight: 600,
-              background: bg,
-              color,
-            }}
-          >
-            {a.status}
-          </span>
-        );
-      },
-    },
-    {
-      key: "created_at",
-      label: "Створено",
-      render: (a: Alert) => formatDate(a.created_at),
-    },
-  ];
-
-  const batchColumns = [
-    { key: "variety", label: "Сорт" },
-    { key: "quantity_kg", label: "Кількість (кг)" },
-    {
-      key: "received_date",
-      label: "Надходження",
-      render: (b: HoneyBatch) => formatDateShort(b.received_date),
-    },
-    {
-      key: "expiration_date",
-      label: "Придатність",
-      render: (b: HoneyBatch) => formatDateShort(b.expiration_date),
-    },
-    {
-      key: "status",
-      label: "Статус",
-      render: (b: HoneyBatch) => {
-        const colors: Record<string, [string, string]> = {
-          ACTIVE: ["var(--green-100)", "var(--green-600)"],
-          EXPIRED: ["var(--red-100)", "var(--red-600)"],
-          SOLD: ["var(--blue-100)", "var(--blue-600)"],
-        };
-        const [bg, color] = colors[b.status] ?? [
-          "var(--gray-100)",
-          "var(--gray-600)",
-        ];
-        return (
-          <span
-            style={{
-              padding: "2px 8px",
-              borderRadius: 20,
-              fontSize: 11,
-              fontWeight: 600,
-              background: bg,
-              color,
-            }}
-          >
-            {b.status}
-          </span>
-        );
-      },
-    },
-  ];
 
   const sectionTitle = (title: string, count: number) => (
     <div
@@ -267,9 +172,110 @@ export default function ReportsPage() {
     </div>
   );
 
+  const measurementColumns = [
+    {
+      key: "measured_at",
+      label: t("common.actions"),
+      render: (m: Measurement) => formatDate(m.measured_at),
+    },
+    { key: "temperature_c", label: `${t("dashboard.temperature")} (°C)` },
+    { key: "humidity_percent", label: `${t("dashboard.humidity")} (%)` },
+    {
+      key: "sensor_id",
+      label: t("nav.sensors"),
+      render: (m: Measurement) => `#${m.sensor_id}`,
+    },
+  ];
+
+  const alertColumns = [
+    { key: "alert_id", label: "ID" },
+    {
+      key: "type",
+      label: t("common.role"),
+      render: (a: Alert) => t(`alert.${a.type}`),
+    },
+    {
+      key: "status",
+      label: t("common.status"),
+      render: (a: Alert) => {
+        const colors: Record<string, [string, string]> = {
+          NEW: ["var(--amber-100)", "var(--amber-700)"],
+          RESOLVED: ["var(--green-100)", "var(--green-600)"],
+          ACKNOWLEDGED: ["var(--blue-100)", "var(--blue-600)"],
+        };
+        const [bg, color] = colors[a.status] ?? [
+          "var(--gray-100)",
+          "var(--gray-600)",
+        ];
+        return (
+          <span
+            style={{
+              padding: "2px 8px",
+              borderRadius: 20,
+              fontSize: 11,
+              fontWeight: 600,
+              background: bg,
+              color,
+            }}
+          >
+            {t(`alert.${a.status}`)}
+          </span>
+        );
+      },
+    },
+    {
+      key: "created_at",
+      label: t("batch.received"),
+      render: (a: Alert) => formatDate(a.created_at),
+    },
+  ];
+
+  const batchColumns = [
+    { key: "variety", label: t("batch.variety") },
+    { key: "quantity_kg", label: t("batch.quantity") },
+    {
+      key: "received_date",
+      label: t("batch.received"),
+      render: (b: HoneyBatch) => formatDateShort(b.received_date),
+    },
+    {
+      key: "expiration_date",
+      label: t("batch.expiry"),
+      render: (b: HoneyBatch) => formatDateShort(b.expiration_date),
+    },
+    {
+      key: "status",
+      label: t("batch.status"),
+      render: (b: HoneyBatch) => {
+        const colors: Record<string, [string, string]> = {
+          ACTIVE: ["var(--green-100)", "var(--green-600)"],
+          EXPIRED: ["var(--red-100)", "var(--red-600)"],
+          SOLD: ["var(--blue-100)", "var(--blue-600)"],
+        };
+        const [bg, color] = colors[b.status] ?? [
+          "var(--gray-100)",
+          "var(--gray-600)",
+        ];
+        return (
+          <span
+            style={{
+              padding: "2px 8px",
+              borderRadius: 20,
+              fontSize: 11,
+              fontWeight: 600,
+              background: bg,
+              color,
+            }}
+          >
+            {t(`batch.${b.status}`)}
+          </span>
+        );
+      },
+    },
+  ];
+
   return (
     <div>
-      {/* Фільтри */}
       <div
         style={{
           display: "flex",
@@ -295,7 +301,6 @@ export default function ReportsPage() {
             </option>
           ))}
         </select>
-
         <input
           type="date"
           style={{
@@ -319,7 +324,6 @@ export default function ReportsPage() {
           value={dateTo}
           onChange={(e) => setDateTo(e.target.value)}
         />
-
         <Button
           variant="ghost"
           icon="📥"
@@ -338,12 +342,13 @@ export default function ReportsPage() {
         </Button>
       </div>
 
-      {loading && <p style={{ color: "var(--gray-500)" }}>Завантаження...</p>}
+      {loading && (
+        <p style={{ color: "var(--gray-500)" }}>{t("common.loading")}</p>
+      )}
 
       {!loading && selected && (
         <>
-          {/* Статистика вимірів */}
-          {sectionTitle("Виміри", filteredMeasurements.length)}
+          {sectionTitle(t("reports.measurements"), filteredMeasurements.length)}
           <div
             style={{
               display: "grid",
@@ -352,38 +357,36 @@ export default function ReportsPage() {
             }}
           >
             {statCard(
-              "Сер. температура",
+              t("reports.avg_temp"),
               temps.length ? `${avg(temps)}°C` : "—",
               "🌡️",
             )}
             {statCard(
-              "Мін. температура",
+              t("reports.min_temp"),
               temps.length ? `${min(temps)}°C` : "—",
               "🔽",
             )}
             {statCard(
-              "Макс. температура",
+              t("reports.max_temp"),
               temps.length ? `${max(temps)}°C` : "—",
               "🔼",
             )}
             {statCard(
-              "Сер. вологість",
+              t("reports.avg_humidity"),
               humids.length ? `${avg(humids)}%` : "—",
               "💧",
             )}
             {statCard(
-              "Мін. вологість",
+              t("reports.min_humidity"),
               humids.length ? `${min(humids)}%` : "—",
               "🔽",
             )}
             {statCard(
-              "Макс. вологість",
+              t("reports.max_humidity"),
               humids.length ? `${max(humids)}%` : "—",
               "🔼",
             )}
           </div>
-
-          {/* Таблиця вимірів */}
           <div style={{ marginTop: 16 }}>
             <Table
               columns={measurementColumns}
@@ -393,8 +396,7 @@ export default function ReportsPage() {
             />
           </div>
 
-          {/* Тривоги */}
-          {sectionTitle("Тривоги за період", filteredAlerts.length)}
+          {sectionTitle(t("reports.alerts_title"), filteredAlerts.length)}
           {filteredAlerts.length > 0 ? (
             <Table
               columns={alertColumns}
@@ -404,12 +406,11 @@ export default function ReportsPage() {
             />
           ) : (
             <p style={{ fontSize: 13, color: "var(--gray-400)" }}>
-              Тривог за цей період не було
+              {t("reports.no_alerts")}
             </p>
           )}
 
-          {/* Партії меду */}
-          {sectionTitle("Партії меду що надійшли", filteredBatches.length)}
+          {sectionTitle(t("reports.batches_title"), filteredBatches.length)}
           {filteredBatches.length > 0 ? (
             <Table
               columns={batchColumns}
@@ -419,7 +420,7 @@ export default function ReportsPage() {
             />
           ) : (
             <p style={{ fontSize: 13, color: "var(--gray-400)" }}>
-              Партій за цей період не надходило
+              {t("reports.no_batches")}
             </p>
           )}
         </>

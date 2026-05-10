@@ -89,12 +89,12 @@ export default function AlertsPage() {
   const exportCSV = () => {
     const headers = [
       "ID",
-      "Тип",
-      "Статус",
-      "Склад",
-      "Датчик",
-      "Створено",
-      "Закрито",
+      t("common.type"),
+      t("common.status"),
+      t("common.warehouse"),
+      t("common.sensor"),
+      t("common.created_at"),
+      t("common.resolved_at"),
     ];
     const rows = filtered.map((a) => [
       a.alert_id,
@@ -117,7 +117,11 @@ export default function AlertsPage() {
 
   const columns = [
     { key: "alert_id", label: "ID" },
-    { key: "type", label: "Тип", render: (a: Alert) => typeBadge(a.type) },
+    {
+      key: "type",
+      label: t("common.type"),
+      render: (a: Alert) => typeBadge(a.type),
+    },
     {
       key: "status",
       label: t("common.status"),
@@ -125,22 +129,22 @@ export default function AlertsPage() {
     },
     {
       key: "warehouse_id",
-      label: "Склад",
+      label: t("common.warehouse"),
       render: (a: Alert) => getWarehouseName(a.warehouse_id),
     },
     {
       key: "sensor_id",
-      label: "Датчик",
+      label: t("common.sensor"),
       render: (a: Alert) => (a.sensor_id ? `#${a.sensor_id}` : "—"),
     },
     {
       key: "created_at",
-      label: "Створено",
+      label: t("common.created_at"),
       render: (a: Alert) => formatDate(a.created_at),
     },
     {
       key: "resolved_at",
-      label: "Закрито",
+      label: t("common.resolved_at"),
       render: (a: Alert) => formatDate(a.resolved_at),
     },
   ];
@@ -165,7 +169,7 @@ export default function AlertsPage() {
           value={filterWarehouse}
           onChange={(e) => setFilterWarehouse(e.target.value)}
         >
-          <option value="">Всі склади</option>
+          <option value="">{t("common.all_warehouses")}</option>
           {warehouses.map((w) => (
             <option key={w.warehouse_id} value={w.warehouse_id}>
               {w.name}

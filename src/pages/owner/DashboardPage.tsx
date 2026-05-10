@@ -125,7 +125,12 @@ export default function DashboardPage() {
           marginBottom: 32,
         }}
       >
-        {card("🏭", "Склади", warehouses.length, "всього складів")}
+        {card(
+          "🏭",
+          t("nav.warehouses"),
+          warehouses.length,
+          t("dashboard.total_warehouses"),
+        )}
         {card(
           "🚨",
           t("nav.alerts"),
@@ -137,20 +142,25 @@ export default function DashboardPage() {
           >
             {activeAlerts.length}
           </span>,
-          "активних тривог",
+          t("dashboard.active_alerts"),
         )}
-        {card("🍯", t("nav.batches"), activeBatches.length, "активних партій")}
+        {card(
+          "🍯",
+          t("nav.batches"),
+          activeBatches.length,
+          t("dashboard.active_batches"),
+        )}
         {card(
           "🌡️",
-          "Температура",
+          t("dashboard.temperature"),
           latestMeasurement ? `${latestMeasurement.temperature_c}°C` : "—",
-          "останній вимір",
+          t("dashboard.last_reading"),
         )}
         {card(
           "💧",
-          "Вологість",
+          t("dashboard.humidity"),
           latestMeasurement ? `${latestMeasurement.humidity_percent}%` : "—",
-          "останній вимір",
+          t("dashboard.last_reading"),
         )}
       </div>
 
@@ -163,7 +173,7 @@ export default function DashboardPage() {
           marginBottom: 16,
         }}
       >
-        Склади
+        {t("dashboard.warehouses_title")}
       </h2>
       {warehouses.map((w) => (
         <div
@@ -225,19 +235,19 @@ export default function DashboardPage() {
           <div style={{ display: "flex", gap: 24 }}>
             {[
               {
-                label: "Температура",
+                label: t("dashboard.temperature"),
                 value: latestMeasurement
                   ? `${latestMeasurement.temperature_c}°C`
                   : "—",
               },
               {
-                label: "Вологість",
+                label: t("dashboard.humidity"),
                 value: latestMeasurement
                   ? `${latestMeasurement.humidity_percent}%`
                   : "—",
               },
               {
-                label: "Тривоги",
+                label: t("dashboard.alerts_count"),
                 value: (
                   <span
                     style={{
@@ -299,7 +309,7 @@ export default function DashboardPage() {
               margin: "32px 0 16px",
             }}
           >
-            Активні тривоги
+            {t("dashboard.active_alerts_title")}
           </h2>
           {activeAlerts.slice(0, 5).map((alert) => (
             <div

@@ -6,7 +6,7 @@ import Table from "../../components/Table";
 import Button from "../../components/Button";
 
 export default function AuditPage() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterEntity, setFilterEntity] = useState("");
@@ -24,7 +24,6 @@ export default function AuditPage() {
     );
 
   const entities = [...new Set(logs.map((l) => l.entity))];
-
   const filtered = logs.filter((l) =>
     filterEntity ? l.entity === filterEntity : true,
   );
@@ -69,20 +68,20 @@ export default function AuditPage() {
 
   const columns = [
     { key: "id", label: "ID" },
-    { key: "entity", label: "Сутність" },
+    { key: "entity", label: t("common.entity") },
     {
       key: "action",
-      label: "Дія",
+      label: t("common.action"),
       render: (l: AuditLog) => actionBadge(l.action),
     },
     {
       key: "actor_user_id",
-      label: "Користувач",
+      label: t("nav.users"),
       render: (l: AuditLog) => `#${l.actor_user_id}`,
     },
     {
       key: "created_at",
-      label: "Час",
+      label: t("common.date"),
       render: (l: AuditLog) => formatDate(l.created_at),
     },
   ];
@@ -107,7 +106,7 @@ export default function AuditPage() {
           value={filterEntity}
           onChange={(e) => setFilterEntity(e.target.value)}
         >
-          <option value="">Всі сутності</option>
+          <option value="">{t("common.all_entities")}</option>
           {entities.map((e) => (
             <option key={e} value={e}>
               {e}

@@ -187,8 +187,8 @@ export default function OwnerUsersPage() {
 
   const columns = [
     { key: "user_id", label: "ID" },
-    { key: "full_name", label: "Ім'я" },
-    { key: "email", label: "Email" },
+    { key: "full_name", label: t("common.full_name") },
+    { key: "email", label: t("common.email") },
     {
       key: "role",
       label: t("common.role"),
@@ -196,7 +196,7 @@ export default function OwnerUsersPage() {
     },
     {
       key: "warehouse_id",
-      label: "Склад",
+      label: t("common.warehouse"),
       render: (u: User) => getWarehouseName(u.warehouse_id),
     },
     {
@@ -308,24 +308,24 @@ export default function OwnerUsersPage() {
           }
         >
           <FormField
-            label="Ім'я"
+            label={t("common.full_name")}
             value={form.full_name}
             onChange={(v) => setForm((f) => ({ ...f, full_name: v }))}
             required
           />
           <FormField
-            label="Email"
+            label={t("common.email")}
             type="email"
             value={form.email}
             onChange={(v) => setForm((f) => ({ ...f, email: v }))}
             required
           />
           <FormField
-            label="Пароль"
+            label={t("common.password")}
             type="password"
             value={form.password}
             onChange={(v) => setForm((f) => ({ ...f, password: v }))}
-            placeholder={editingUser ? "Залиш порожнім щоб не змінювати" : ""}
+            placeholder={editingUser ? t("common.leave_blank") : ""}
             required={!editingUser}
           />
           <FormField
@@ -335,7 +335,7 @@ export default function OwnerUsersPage() {
             options={roleOptions}
           />
           <FormField
-            label="Склад"
+            label={t("common.warehouse")}
             value={form.warehouse_id}
             onChange={(v) => setForm((f) => ({ ...f, warehouse_id: v }))}
             options={warehouseOptions}
