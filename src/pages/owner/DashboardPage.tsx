@@ -1,8 +1,19 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getAllWarehouses } from "../../api/warehouses";
-import { getAlerts, getMeasurements, getHoneyBatches } from "../../api/index";
-import type { Warehouse, Alert, Measurement, HoneyBatch } from "../../types";
+import {
+  getAlerts,
+  getMeasurements,
+  getHoneyBatches,
+  getAllSensors,
+} from "../../api/index";
+import type {
+  Warehouse,
+  Alert,
+  Measurement,
+  HoneyBatch,
+  Sensor,
+} from "../../types";
 
 export default function DashboardPage() {
   const { t, i18n } = useTranslation();
@@ -10,22 +21,25 @@ export default function DashboardPage() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [batches, setBatches] = useState<HoneyBatch[]>([]);
+  const [allSensors, setAllSensors] = useState<Sensor[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       try {
-        const [w, a, m, b] = await Promise.all([
+        const [w, a, m, b, s] = await Promise.all([
           getAllWarehouses(),
           getAlerts(),
           getMeasurements(),
           getHoneyBatches(),
+          getAllSensors(),
         ]);
         setWarehouses(w);
         setAlerts(a);
         setMeasurements(m);
         setBatches(b);
+        setAllSensors(s);
       } catch {
         // тихо — dashboard показує порожні дані
       } finally {
@@ -177,128 +191,148 @@ export default function DashboardPage() {
       >
         {t("dashboard.warehouses_title")}
       </h2>
-      {warehouses.map((w) => (
-        <div
-          key={w.warehouse_id}
-          style={{
-            background: "#fff",
-            borderRadius: 12,
-            border: "1px solid var(--gray-200)",
-            padding: "20px 24px",
-            boxShadow: "var(--shadow-sm)",
-            marginBottom: 16,
-          }}
-        >
+
+      {warehouses.map((w) => {
+        const warehouseSensorIds = allSensors
+          .filter((s) => s.warehouse_id === w.warehouse_id)
+          .map((s) => s.sensor_id);
+
+        const warehouseMeasurements = measurements.filter((m) =>
+          warehouseSensorIds.includes(m.sensor_id),
+        );
+
+        const latestM =
+          warehouseMeasurements.length > 0
+            ? [...warehouseMeasurements].sort(
+                (a, b) =>
+                  new Date(b.measured_at).getTime() -
+                  new Date(a.measured_at).getTime(),
+              )[0]
+            : null;
+
+        return (
           <div
+            key={w.warehouse_id}
             style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 12,
+              background: "#fff",
+              borderRadius: 12,
+              border: "1px solid var(--gray-200)",
+              padding: "20px 24px",
+              boxShadow: "var(--shadow-sm)",
+              marginBottom: 16,
             }}
           >
-            <span
+            <div
               style={{
-                fontFamily: "var(--font-display)",
-                fontSize: 16,
-                fontWeight: 700,
-                color: "var(--gray-900)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 12,
               }}
             >
-              {w.name}
-            </span>
-            <span
+              <span
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: 16,
+                  fontWeight: 700,
+                  color: "var(--gray-900)",
+                }}
+              >
+                {w.name}
+              </span>
+              <span
+                style={{
+                  padding: "3px 10px",
+                  borderRadius: 20,
+                  fontSize: 11,
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  background:
+                    w.status === "ACTIVE"
+                      ? "var(--green-100)"
+                      : "var(--gray-100)",
+                  color:
+                    w.status === "ACTIVE"
+                      ? "var(--green-600)"
+                      : "var(--gray-600)",
+                }}
+              >
+                {w.status === "ACTIVE"
+                  ? t("common.active")
+                  : t("common.inactive")}
+              </span>
+            </div>
+            <div
               style={{
-                padding: "3px 10px",
-                borderRadius: 20,
-                fontSize: 11,
-                fontWeight: 600,
-                textTransform: "uppercase",
-                background:
-                  w.status === "ACTIVE"
-                    ? "var(--green-100)"
-                    : "var(--gray-100)",
-                color:
-                  w.status === "ACTIVE"
-                    ? "var(--green-600)"
-                    : "var(--gray-600)",
+                fontSize: 13,
+                color: "var(--gray-500)",
+                marginBottom: 12,
               }}
             >
-              {w.status === "ACTIVE"
-                ? t("common.active")
-                : t("common.inactive")}
-            </span>
-          </div>
-          <div
-            style={{ fontSize: 13, color: "var(--gray-500)", marginBottom: 12 }}
-          >
-            📍 {w.location}
-          </div>
-          <div style={{ display: "flex", gap: 24 }}>
-            {[
-              {
-                label: t("dashboard.temperature"),
-                value: latestMeasurement
-                  ? `${latestMeasurement.temperature_c}°C`
-                  : "—",
-              },
-              {
-                label: t("dashboard.humidity"),
-                value: latestMeasurement
-                  ? `${latestMeasurement.humidity_percent}%`
-                  : "—",
-              },
-              {
-                label: t("dashboard.alerts_count"),
-                value: (
-                  <span
-                    style={{
-                      color:
+              📍 {w.location}
+            </div>
+            <div style={{ display: "flex", gap: 24 }}>
+              {[
+                {
+                  label: t("dashboard.temperature"),
+                  value: latestM ? `${latestM.temperature_c}°C` : "—",
+                },
+                {
+                  label: t("dashboard.humidity"),
+                  value: latestM ? `${latestM.humidity_percent}%` : "—",
+                },
+                {
+                  label: t("dashboard.alerts_count"),
+                  value: (
+                    <span
+                      style={{
+                        color:
+                          activeAlerts.filter(
+                            (a) => a.warehouse_id === w.warehouse_id,
+                          ).length > 0
+                            ? "var(--red-500)"
+                            : "var(--green-500)",
+                      }}
+                    >
+                      {
                         activeAlerts.filter(
                           (a) => a.warehouse_id === w.warehouse_id,
-                        ).length > 0
-                          ? "var(--red-500)"
-                          : "var(--green-500)",
+                        ).length
+                      }
+                    </span>
+                  ),
+                },
+              ].map((m) => (
+                <div
+                  key={m.label}
+                  style={{ display: "flex", flexDirection: "column", gap: 2 }}
+                >
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: "var(--gray-400)",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
                     }}
                   >
-                    {
-                      activeAlerts.filter(
-                        (a) => a.warehouse_id === w.warehouse_id,
-                      ).length
-                    }
+                    {m.label}
                   </span>
-                ),
-              },
-            ].map((m) => (
-              <div
-                key={m.label}
-                style={{ display: "flex", flexDirection: "column", gap: 2 }}
-              >
-                <span
-                  style={{
-                    fontSize: 11,
-                    color: "var(--gray-400)",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.5px",
-                  }}
-                >
-                  {m.label}
-                </span>
-                <span
-                  style={{
-                    fontSize: 20,
-                    fontWeight: 700,
-                    fontFamily: "var(--font-display)",
-                    color: "var(--gray-900)",
-                  }}
-                >
-                  {m.value}
-                </span>
-              </div>
-            ))}
+                  <span
+                    style={{
+                      fontSize: 20,
+                      fontWeight: 700,
+                      fontFamily: "var(--font-display)",
+                      color: "var(--gray-900)",
+                    }}
+                  >
+                    {m.value}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       {activeAlerts.length > 0 && (
         <>

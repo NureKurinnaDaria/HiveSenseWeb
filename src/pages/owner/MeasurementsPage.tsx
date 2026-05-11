@@ -29,7 +29,9 @@ export default function MeasurementsPage() {
   };
 
   useEffect(() => {
-    load();
+    (async () => {
+      await load();
+    })();
   }, []);
 
   const formatDate = (dateStr: string) =>

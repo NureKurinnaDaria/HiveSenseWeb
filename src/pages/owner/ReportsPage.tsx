@@ -1,51 +1,68 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { Warehouse, Measurement, Alert, HoneyBatch } from "../../types";
+import type {
+  Measurement,
+  Alert,
+  HoneyBatch,
+  Warehouse,
+  Sensor,
+} from "../../types";
+import {
+  getMeasurements,
+  getAlerts,
+  getHoneyBatches,
+  getAllSensors,
+} from "../../api/index";
 import { getAllWarehouses } from "../../api/warehouses";
-import { getMeasurements, getAlerts, getHoneyBatches } from "../../api/index";
 import Button from "../../components/Button";
 import Table from "../../components/Table";
 
 export default function ReportsPage() {
   const { t, i18n } = useTranslation();
-  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [batches, setBatches] = useState<HoneyBatch[]>([]);
   const [loading, setLoading] = useState(false);
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [allSensors, setAllSensors] = useState<Sensor[]>([]);
 
-  const today = new Date().toISOString().slice(0, 10);
-  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .slice(0, 10);
-  const [dateFrom, setDateFrom] = useState(weekAgo);
-  const [dateTo, setDateTo] = useState(today);
+  const [dateFrom, setDateFrom] = useState(() =>
+    new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+  );
+  const [dateTo, setDateTo] = useState(() =>
+    new Date().toISOString().slice(0, 10),
+  );
 
   useEffect(() => {
-    getAllWarehouses()
-      .then((w) => {
+    Promise.all([getAllWarehouses(), getAllSensors()])
+      .then(([w, s]) => {
         setWarehouses(w);
+        setAllSensors(s);
         if (w.length > 0) setSelected(w[0].warehouse_id);
       })
-      .catch(() => {}); // тихо, без Toast
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
     if (!selected) return;
-    setLoading(true);
-    Promise.all([
-      getMeasurements(selected),
-      getAlerts(selected),
-      getHoneyBatches(selected),
-    ])
-      .then(([m, a, b]) => {
+    (async () => {
+      setLoading(true);
+      try {
+        const [m, a, b] = await Promise.all([
+          getMeasurements(selected),
+          getAlerts(selected),
+          getHoneyBatches(selected),
+        ]);
         setMeasurements(m);
         setAlerts(a);
         setBatches(b);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      } catch {
+        // тихо
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, [selected]);
 
   const inRange = (dateStr: string) => {
@@ -53,11 +70,16 @@ export default function ReportsPage() {
     return d >= dateFrom && d <= dateTo;
   };
 
-  const filteredMeasurements = measurements.filter((m) =>
-    inRange(m.measured_at),
-  );
-  const filteredAlerts = alerts.filter((a) => inRange(a.created_at));
+  const warehouseSensorIds = allSensors
+    .filter((s) => s.warehouse_id === selected)
+    .map((s) => s.sensor_id);
 
+  const filteredMeasurements = measurements.filter(
+    (m) => inRange(m.measured_at) && warehouseSensorIds.includes(m.sensor_id),
+  );
+  const filteredAlerts = alerts.filter(
+    (a) => inRange(a.created_at) && a.warehouse_id === selected,
+  );
   const filteredBatches = batches.filter(
     (b) => inRange(b.received_date) && b.warehouse_id === selected,
   );
@@ -301,7 +323,7 @@ export default function ReportsPage() {
           value={selected ?? ""}
           onChange={(e) => setSelected(Number(e.target.value))}
         >
-          {warehouses.map((w) => (
+          {warehouses.map((w: Warehouse) => (
             <option key={w.warehouse_id} value={w.warehouse_id}>
               {w.name}
             </option>

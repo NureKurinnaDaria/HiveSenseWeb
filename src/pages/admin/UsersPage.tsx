@@ -74,7 +74,9 @@ export default function UsersPage() {
   };
 
   useEffect(() => {
-    load();
+    (async () => {
+      await load();
+    })();
   }, []);
 
   const openCreate = () => {
@@ -130,9 +132,9 @@ export default function UsersPage() {
 
   const handleBlock = async (user: User) => {
     try {
-      user.is_active
-        ? await blockUser(user.user_id)
-        : await unblockUser(user.user_id);
+      await (user.is_active
+        ? blockUser(user.user_id)
+        : unblockUser(user.user_id));
       await load();
     } catch {
       showToast(t("common.save_error"), "error");
@@ -236,7 +238,7 @@ export default function UsersPage() {
           );
         const isSelf =
           u.user_id === currentUser?.user_id ||
-          u.user_id === (currentUser as any)?.id;
+          u.user_id === (currentUser as { id?: number })?.id;
         return (
           <div style={{ display: "flex", gap: 6 }}>
             <button

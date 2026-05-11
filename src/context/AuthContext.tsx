@@ -23,19 +23,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem("access_token");
-    const savedUser = localStorage.getItem("user");
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
-    }
-    setIsLoading(false);
-  }, []);
+    (async () => {
+      const savedToken = localStorage.getItem("access_token");
+      const savedUser = localStorage.getItem("user");
+      if (savedToken && savedUser) {
+        setToken(savedToken);
+        setUser(JSON.parse(savedUser));
+      }
+      setIsLoading(false);
+    })();
+  }, []);  
 
   const login = (newToken: string, newUser: User) => {
     const normalizedUser = {
       ...newUser,
-      user_id: newUser.user_id ?? (newUser as any).id,
+      user_id: newUser.user_id ?? (newUser as User & { id?: number }).id,
     };
     localStorage.setItem("access_token", newToken);
     localStorage.setItem("user", JSON.stringify(normalizedUser));
@@ -56,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     </AuthContext.Provider>
   );
 }
-
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");

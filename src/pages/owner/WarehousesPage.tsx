@@ -64,7 +64,9 @@ export default function WarehousesPage() {
   };
 
   useEffect(() => {
-    load();
+    (async () => {
+      await load();
+    })();
   }, []);
 
   const openCreate = () => {

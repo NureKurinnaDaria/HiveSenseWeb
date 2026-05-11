@@ -74,7 +74,9 @@ export default function ThresholdsPage() {
   };
 
   useEffect(() => {
-    load();
+    (async () => {
+      await load();
+    })();
   }, []);
 
   const openCreate = () => {

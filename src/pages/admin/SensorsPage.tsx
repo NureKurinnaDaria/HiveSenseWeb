@@ -68,7 +68,9 @@ export default function SensorsPage() {
   };
 
   useEffect(() => {
-    load();
+    (async () => {
+      await load();
+    })();
   }, []);
 
   const openCreate = () => {

@@ -33,7 +33,7 @@ export function Toast({ message, type, onClose }: ToastProps) {
     </div>
   );
 }
-
+// eslint-disable-next-line react-refresh/only-export-components
 export function useToast() {
   const [toast, setToast] = useState<{
     message: string;

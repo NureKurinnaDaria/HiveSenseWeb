@@ -14,11 +14,17 @@ export default function AuditPage() {
   const [filterEntity, setFilterEntity] = useState("");
 
   useEffect(() => {
-    setLoading(true);
-    getAuditLogs()
-      .then(setLogs)
-      .catch(() => showToast(t("common.load_error"), "error"))
-      .finally(() => setLoading(false));
+    (async () => {
+      setLoading(true);
+      try {
+        const data = await getAuditLogs();
+        setLogs(data);
+      } catch {
+        showToast(t("common.load_error"), "error");
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
   const formatDate = (dateStr: string) =>

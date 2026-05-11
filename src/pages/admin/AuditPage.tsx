@@ -30,7 +30,9 @@ export default function AuditPage() {
   };
 
   useEffect(() => {
-    load();
+    (async () => {
+      await load();
+    })();
   }, []);
 
   const formatDate = (dateStr: string) =>

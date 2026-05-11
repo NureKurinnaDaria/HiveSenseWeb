@@ -72,7 +72,9 @@ export default function BatchesPage() {
   };
 
   useEffect(() => {
-    load();
+    (async () => {
+      await load();
+    })();
   }, []);
 
   const openCreate = () => {
