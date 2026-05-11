@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Warehouse } from "../../types";
 import {
@@ -12,6 +12,8 @@ import Button from "../../components/Button";
 import Modal from "../../components/Modal";
 import FormField from "../../components/FormField";
 import { Toast, useToast } from "../../components/Toast";
+import IconButton from "../../components/IconButton";
+import StatusBadge from "../../components/StatusBadge";
 
 interface WarehouseForm {
   name: string;
@@ -20,23 +22,6 @@ interface WarehouseForm {
 }
 
 const emptyForm: WarehouseForm = { name: "", location: "", status: "ACTIVE" };
-
-const badge = (active: boolean, activeLabel: string, inactiveLabel: string) => (
-  <span
-    style={{
-      padding: "3px 10px",
-      borderRadius: 20,
-      fontSize: 11,
-      fontWeight: 600,
-      textTransform: "uppercase",
-      letterSpacing: "0.4px",
-      background: active ? "var(--green-100)" : "var(--gray-100)",
-      color: active ? "var(--green-600)" : "var(--gray-600)",
-    }}
-  >
-    {active ? activeLabel : inactiveLabel}
-  </span>
-);
 
 export default function WarehousesPage() {
   const { t } = useTranslation();
@@ -52,7 +37,7 @@ export default function WarehousesPage() {
   const [saving, setSaving] = useState(false);
   const { toast, showToast, hideToast } = useToast();
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       setWarehouses(await getAllWarehouses());
@@ -61,13 +46,13 @@ export default function WarehousesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast, t]);
 
   useEffect(() => {
     (async () => {
       await load();
     })();
-  }, []);
+  }, [load]);
 
   const openCreate = () => {
     setEditingWarehouse(null);
@@ -123,19 +108,6 @@ export default function WarehousesPage() {
       w.location.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const iconBtn = {
-    width: 30,
-    height: 30,
-    borderRadius: 6,
-    border: "1.5px solid var(--gray-200)",
-    background: "#fff",
-    fontSize: 14,
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  };
-
   const columns = [
     { key: "warehouse_id", label: "ID" },
     { key: "name", label: t("common.name") },
@@ -143,28 +115,30 @@ export default function WarehousesPage() {
     {
       key: "status",
       label: t("common.status"),
-      render: (w: Warehouse) =>
-        badge(w.status === "ACTIVE", t("common.active"), t("common.inactive")),
+      render: (w: Warehouse) => (
+        <StatusBadge
+          label={
+            w.status === "ACTIVE" ? t("common.active") : t("common.inactive")
+          }
+          variant={w.status === "ACTIVE" ? "success" : "neutral"}
+          uppercase
+        />
+      ),
     },
     {
       key: "actions",
       label: t("common.actions"),
       render: (w: Warehouse) => (
         <div style={{ display: "flex", gap: 6 }}>
-          <button
-            style={iconBtn}
-            onClick={() => openEdit(w)}
-            title={t("common.edit")}
-          >
+          <IconButton onClick={() => openEdit(w)} title={t("common.edit")}>
             ✏️
-          </button>
-          <button
-            style={iconBtn}
+          </IconButton>
+          <IconButton
             onClick={() => setConfirmDelete(w)}
             title={t("common.delete")}
           >
             🗑️
-          </button>
+          </IconButton>
         </div>
       ),
     },

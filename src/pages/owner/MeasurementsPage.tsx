@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Measurement, Warehouse } from "../../types";
 import { getMeasurements } from "../../api/index";
@@ -15,7 +15,7 @@ export default function MeasurementsPage() {
   const [loading, setLoading] = useState(true);
   const [filterWarehouse, setFilterWarehouse] = useState("");
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const [m, w] = await Promise.all([getMeasurements(), getAllWarehouses()]);
@@ -26,13 +26,13 @@ export default function MeasurementsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast, t]);
 
   useEffect(() => {
     (async () => {
       await load();
     })();
-  }, []);
+  }, [load]);
 
   const formatDate = (dateStr: string) =>
     new Date(dateStr).toLocaleString(

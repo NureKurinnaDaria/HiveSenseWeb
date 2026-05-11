@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getAllWarehouses } from "../../api/warehouses";
+import { Toast, useToast } from "../../components/Toast";
 import {
   getAlerts,
   getMeasurements,
@@ -17,6 +18,7 @@ import type {
 
 export default function DashboardPage() {
   const { t, i18n } = useTranslation();
+  const { toast, showToast, hideToast } = useToast();
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
@@ -24,30 +26,34 @@ export default function DashboardPage() {
   const [allSensors, setAllSensors] = useState<Sensor[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [w, a, m, b, s] = await Promise.all([
+        getAllWarehouses(),
+        getAlerts(),
+        getMeasurements(),
+        getHoneyBatches(),
+        getAllSensors(),
+      ]);
+
+      setWarehouses(w);
+      setAlerts(a);
+      setMeasurements(m);
+      setBatches(b);
+      setAllSensors(s);
+    } catch {
+      showToast(t("common.load_error"), "error");
+    } finally {
+      setLoading(false);
+    }
+  }, [showToast, t]);
+
   useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      try {
-        const [w, a, m, b, s] = await Promise.all([
-          getAllWarehouses(),
-          getAlerts(),
-          getMeasurements(),
-          getHoneyBatches(),
-          getAllSensors(),
-        ]);
-        setWarehouses(w);
-        setAlerts(a);
-        setMeasurements(m);
-        setBatches(b);
-        setAllSensors(s);
-      } catch {
-        // тихо — dashboard показує порожні дані
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, []);
+    (async () => {
+      await load();
+    })();
+  }, [load]);
 
   if (loading)
     return (
@@ -381,6 +387,9 @@ export default function DashboardPage() {
             </div>
           ))}
         </>
+      )}
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={hideToast} />
       )}
     </div>
   );

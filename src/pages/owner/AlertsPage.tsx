@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Alert, Warehouse } from "../../types";
 import { getAlerts } from "../../api/index";
@@ -6,6 +6,7 @@ import { getAllWarehouses } from "../../api/warehouses";
 import Table from "../../components/Table";
 import Button from "../../components/Button";
 import { Toast, useToast } from "../../components/Toast";
+import StatusBadge from "../../components/StatusBadge";
 
 export default function AlertsPage() {
   const { t, i18n } = useTranslation();
@@ -15,7 +16,7 @@ export default function AlertsPage() {
   const [loading, setLoading] = useState(true);
   const [filterWarehouse, setFilterWarehouse] = useState("");
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const [a, w] = await Promise.all([getAlerts(), getAllWarehouses()]);
@@ -26,13 +27,13 @@ export default function AlertsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast, t]);
 
   useEffect(() => {
     (async () => {
       await load();
     })();
-  }, []);
+  }, [load]);
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "—";
@@ -47,50 +48,6 @@ export default function AlertsPage() {
   const filtered = alerts.filter((a) =>
     filterWarehouse ? a.warehouse_id === Number(filterWarehouse) : true,
   );
-
-  const typeBadge = (type: string) => {
-    const isHigh = type.includes("HIGH");
-    return (
-      <span
-        style={{
-          padding: "3px 10px",
-          borderRadius: 20,
-          fontSize: 11,
-          fontWeight: 600,
-          background: isHigh ? "var(--red-100)" : "var(--blue-100)",
-          color: isHigh ? "var(--red-600)" : "var(--blue-600)",
-        }}
-      >
-        {t(`alert.${type}`)}
-      </span>
-    );
-  };
-
-  const statusBadge = (status: string) => {
-    const colors: Record<string, [string, string]> = {
-      NEW: ["var(--amber-100)", "var(--amber-700)"],
-      ACKNOWLEDGED: ["var(--blue-100)", "var(--blue-600)"],
-      RESOLVED: ["var(--green-100)", "var(--green-600)"],
-    };
-    const [bg, color] = colors[status] ?? [
-      "var(--gray-100)",
-      "var(--gray-600)",
-    ];
-    return (
-      <span
-        style={{
-          padding: "3px 10px",
-          borderRadius: 20,
-          fontSize: 11,
-          fontWeight: 600,
-          background: bg,
-          color,
-        }}
-      >
-        {t(`alert.${status}`)}
-      </span>
-    );
-  };
 
   const exportCSV = () => {
     const headers = [
@@ -126,12 +83,28 @@ export default function AlertsPage() {
     {
       key: "type",
       label: t("common.type"),
-      render: (a: Alert) => typeBadge(a.type),
+      render: (a: Alert) => (
+        <StatusBadge
+          label={t(`alert.${a.type}`)}
+          variant={a.type.includes("HIGH") ? "danger" : "info"}
+        />
+      ),
     },
     {
       key: "status",
       label: t("common.status"),
-      render: (a: Alert) => statusBadge(a.status),
+      render: (a: Alert) => (
+        <StatusBadge
+          label={t(`alert.${a.status}`)}
+          variant={
+            a.status === "NEW"
+              ? "warning"
+              : a.status === "ACKNOWLEDGED"
+                ? "info"
+                : "success"
+          }
+        />
+      ),
     },
     {
       key: "warehouse_id",

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 interface ToastProps {
   message: string;
@@ -33,6 +33,7 @@ export function Toast({ message, type, onClose }: ToastProps) {
     </div>
   );
 }
+
 // eslint-disable-next-line react-refresh/only-export-components
 export function useToast() {
   const [toast, setToast] = useState<{
@@ -40,14 +41,20 @@ export function useToast() {
     type: "success" | "error";
   } | null>(null);
 
-  const showToast = (
-    message: string,
-    type: "success" | "error" = "success",
-  ) => {
-    setToast({ message, type });
+  const showToast = useCallback(
+    (message: string, type: "success" | "error" = "success") => {
+      setToast({ message, type });
+    },
+    [],
+  );
+
+  const hideToast = useCallback(() => {
+    setToast(null);
+  }, []);
+
+  return {
+    toast,
+    showToast,
+    hideToast,
   };
-
-  const hideToast = () => setToast(null);
-
-  return { toast, showToast, hideToast };
 }

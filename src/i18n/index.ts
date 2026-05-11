@@ -149,7 +149,10 @@ const resources = {
       },
       sensor: {
         serial: "Серійний номер",
+        serial_number: "Серійний номер",
+        serial_number_placeholder: "Наприклад, HS-001",
         type: "Тип датчика",
+        combined: "Комбінований",
       },
       audit: {
         filter_entity: "Сутність (users, sensors...)",
@@ -295,7 +298,10 @@ const resources = {
       },
       sensor: {
         serial: "Serial number",
+        serial_number: "Serial number",
+        serial_number_placeholder: "For example, HS-001",
         type: "Sensor type",
+        combined: "Combined",
       },
       audit: {
         filter_entity: "Entity (users, sensors...)",

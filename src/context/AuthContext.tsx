@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import type { User } from "../types";
+import { getMe, normalizeUser } from "../api/users";
 
 interface AuthContextType {
   user: User | null;
@@ -23,22 +24,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    (async () => {
+    const initAuth = async () => {
       const savedToken = localStorage.getItem("access_token");
-      const savedUser = localStorage.getItem("user");
-      if (savedToken && savedUser) {
-        setToken(savedToken);
-        setUser(JSON.parse(savedUser));
+
+      if (!savedToken) {
+        setToken(null);
+        setUser(null);
+        setIsLoading(false);
+        return;
       }
-      setIsLoading(false);
-    })();
-  }, []);  
+
+      setToken(savedToken);
+
+      try {
+        const currentUser = await getMe();
+        setUser(currentUser);
+        localStorage.setItem("user", JSON.stringify(currentUser));
+      } catch {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("user");
+        setToken(null);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void initAuth();
+  }, []);
 
   const login = (newToken: string, newUser: User) => {
-    const normalizedUser = {
-      ...newUser,
-      user_id: newUser.user_id ?? (newUser as User & { id?: number }).id,
-    };
+    const normalizedUser = normalizeUser(newUser);
+
     localStorage.setItem("access_token", newToken);
     localStorage.setItem("user", JSON.stringify(normalizedUser));
     setToken(newToken);

@@ -28,14 +28,26 @@ export const toFrontendRole = (role: string): FrontendRole => {
   return map[role] ?? "EMPLOYEE";
 };
 
+type UserResponse = Omit<User, "role" | "user_id"> & {
+  role: string;
+  user_id?: number;
+  id?: number;
+};
+
+export const normalizeUser = (user: UserResponse): User => ({
+  ...user,
+  user_id: user.user_id ?? user.id ?? 0,
+  role: toFrontendRole(user.role),
+});
+
 export const getMe = async (): Promise<User> => {
   const res = await client.get<User>("/users/me");
-  return res.data;
+  return normalizeUser(res.data);
 };
 
 export const getAllUsers = async (): Promise<User[]> => {
   const res = await client.get<User[]>("/users");
-  return res.data;
+  return res.data.map(normalizeUser);
 };
 
 export const createUser = async (data: {
@@ -46,11 +58,11 @@ export const createUser = async (data: {
   is_active: boolean;
   warehouse_id?: number;
 }): Promise<User> => {
-  const res = await client.post<User>("/users", {
+  const res = await client.post<UserResponse>("/users", {
     ...data,
     role: toBackendRole(data.role),
   });
-  return res.data;
+  return normalizeUser(res.data);
 };
 
 export const updateUser = async (

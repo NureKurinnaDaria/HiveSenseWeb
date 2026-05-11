@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { HoneyBatch, Warehouse } from "../../types";
 import {
@@ -13,6 +13,8 @@ import Button from "../../components/Button";
 import Modal from "../../components/Modal";
 import FormField from "../../components/FormField";
 import { Toast, useToast } from "../../components/Toast";
+import IconButton from "../../components/IconButton";
+import StatusBadge from "../../components/StatusBadge";
 
 interface BatchForm {
   variety: string;
@@ -32,19 +34,6 @@ const emptyForm: BatchForm = {
   warehouse_id: "",
 };
 
-const iconBtn: React.CSSProperties = {
-  width: 30,
-  height: 30,
-  borderRadius: 6,
-  border: "1.5px solid var(--gray-200)",
-  background: "#fff",
-  fontSize: 14,
-  cursor: "pointer",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-};
-
 export default function BatchesPage() {
   const { t, i18n } = useTranslation();
   const [batches, setBatches] = useState<HoneyBatch[]>([]);
@@ -58,7 +47,7 @@ export default function BatchesPage() {
   const [saving, setSaving] = useState(false);
   const { toast, showToast, hideToast } = useToast();
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const [b, w] = await Promise.all([getHoneyBatches(), getAllWarehouses()]);
@@ -69,13 +58,13 @@ export default function BatchesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast, t]);
 
   useEffect(() => {
     (async () => {
       await load();
     })();
-  }, []);
+  }, [load]);
 
   const openCreate = () => {
     setEditingBatch(null);
@@ -144,33 +133,6 @@ export default function BatchesPage() {
   const getWarehouseName = (id: number) =>
     warehouses.find((w) => w.warehouse_id === id)?.name ?? "—";
 
-  const statusBadge = (status: string) => {
-    const colors: Record<string, [string, string]> = {
-      ACTIVE: ["var(--green-100)", "var(--green-600)"],
-      EXPIRED: ["var(--red-100)", "var(--red-600)"],
-      SOLD: ["var(--blue-100)", "var(--blue-600)"],
-    };
-    const [bg, color] = colors[status] ?? [
-      "var(--gray-100)",
-      "var(--gray-600)",
-    ];
-    return (
-      <span
-        style={{
-          padding: "3px 10px",
-          borderRadius: 20,
-          fontSize: 11,
-          fontWeight: 600,
-          textTransform: "uppercase",
-          background: bg,
-          color,
-        }}
-      >
-        {t(`batch.${status}`)}
-      </span>
-    );
-  };
-
   const exportCSV = () => {
     const headers = [
       "ID",
@@ -232,7 +194,19 @@ export default function BatchesPage() {
     {
       key: "status",
       label: t("batch.status"),
-      render: (b: HoneyBatch) => statusBadge(b.status),
+      render: (b: HoneyBatch) => (
+        <StatusBadge
+          label={t(`batch.${b.status}`)}
+          variant={
+            b.status === "ACTIVE"
+              ? "success"
+              : b.status === "EXPIRED"
+                ? "danger"
+                : "info"
+          }
+          uppercase
+        />
+      ),
     },
     {
       key: "warehouse_id",
@@ -244,20 +218,15 @@ export default function BatchesPage() {
       label: t("common.actions"),
       render: (b: HoneyBatch) => (
         <div style={{ display: "flex", gap: 6 }}>
-          <button
-            style={iconBtn}
-            onClick={() => openEdit(b)}
-            title={t("common.edit")}
-          >
+          <IconButton onClick={() => openEdit(b)} title={t("common.edit")}>
             ✏️
-          </button>
-          <button
-            style={iconBtn}
+          </IconButton>
+          <IconButton
             onClick={() => setConfirmDelete(b)}
             title={t("common.delete")}
           >
             🗑️
-          </button>
+          </IconButton>
         </div>
       ),
     },

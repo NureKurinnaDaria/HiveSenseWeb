@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type {
   Measurement,
@@ -16,9 +16,11 @@ import {
 import { getAllWarehouses } from "../../api/warehouses";
 import Button from "../../components/Button";
 import Table from "../../components/Table";
+import { Toast, useToast } from "../../components/Toast";
 
 export default function ReportsPage() {
   const { t, i18n } = useTranslation();
+  const { toast, showToast, hideToast } = useToast();
   const [selected, setSelected] = useState<number | null>(null);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -34,36 +36,52 @@ export default function ReportsPage() {
     new Date().toISOString().slice(0, 10),
   );
 
-  useEffect(() => {
-    Promise.all([getAllWarehouses(), getAllSensors()])
-      .then(([w, s]) => {
-        setWarehouses(w);
-        setAllSensors(s);
-        if (w.length > 0) setSelected(w[0].warehouse_id);
-      })
-      .catch(() => {});
-  }, []);
+  const loadInitialData = useCallback(async () => {
+    try {
+      const [w, s] = await Promise.all([getAllWarehouses(), getAllSensors()]);
+      setWarehouses(w);
+      setAllSensors(s);
+      if (w.length > 0) setSelected(w[0].warehouse_id);
+    } catch {
+      showToast(t("common.load_error"), "error");
+    }
+  }, [showToast, t]);
 
   useEffect(() => {
-    if (!selected) return;
     (async () => {
+      await loadInitialData();
+    })();
+  }, [loadInitialData]);
+
+  const loadReportData = useCallback(
+    async (warehouseId: number) => {
       setLoading(true);
       try {
         const [m, a, b] = await Promise.all([
-          getMeasurements(selected),
-          getAlerts(selected),
-          getHoneyBatches(selected),
+          getMeasurements(warehouseId),
+          getAlerts(warehouseId),
+          getHoneyBatches(warehouseId),
         ]);
+
         setMeasurements(m);
         setAlerts(a);
         setBatches(b);
       } catch {
-        // тихо
+        showToast(t("common.load_error"), "error");
       } finally {
         setLoading(false);
       }
+    },
+    [showToast, t],
+  );
+
+  useEffect(() => {
+    if (!selected) return;
+
+    (async () => {
+      await loadReportData(selected);
     })();
-  }, [selected]);
+  }, [selected, loadReportData]);
 
   const inRange = (dateStr: string) => {
     const d = dateStr?.slice(0, 10);
@@ -452,6 +470,9 @@ export default function ReportsPage() {
             </p>
           )}
         </>
+      )}
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={hideToast} />
       )}
     </div>
   );

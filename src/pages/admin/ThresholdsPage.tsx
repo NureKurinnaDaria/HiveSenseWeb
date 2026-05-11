@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Threshold, Warehouse } from "../../types";
 import {
@@ -13,6 +13,7 @@ import Button from "../../components/Button";
 import Modal from "../../components/Modal";
 import FormField from "../../components/FormField";
 import { Toast, useToast } from "../../components/Toast";
+import IconButton from "../../components/IconButton";
 
 interface ThresholdForm {
   warehouse_id: string;
@@ -30,19 +31,6 @@ const emptyForm: ThresholdForm = {
   humidity_max: "",
 };
 
-const iconBtn: React.CSSProperties = {
-  width: 30,
-  height: 30,
-  borderRadius: 6,
-  border: "1.5px solid var(--gray-200)",
-  background: "#fff",
-  fontSize: 14,
-  cursor: "pointer",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-};
-
 export default function ThresholdsPage() {
   const { t } = useTranslation();
   const { toast, showToast, hideToast } = useToast();
@@ -57,7 +45,7 @@ export default function ThresholdsPage() {
   const [confirmDelete, setConfirmDelete] = useState<Threshold | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const [th, w] = await Promise.all([
@@ -71,13 +59,13 @@ export default function ThresholdsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast, t]);
 
   useEffect(() => {
     (async () => {
       await load();
     })();
-  }, []);
+  }, [load]);
 
   const openCreate = () => {
     setEditingThreshold(null);
@@ -171,20 +159,15 @@ export default function ThresholdsPage() {
       label: t("common.actions"),
       render: (th: Threshold) => (
         <div style={{ display: "flex", gap: 6 }}>
-          <button
-            style={iconBtn}
-            onClick={() => openEdit(th)}
-            title={t("common.edit")}
-          >
+          <IconButton onClick={() => openEdit(th)} title={t("common.edit")}>
             ✏️
-          </button>
-          <button
-            style={iconBtn}
+          </IconButton>
+          <IconButton
             onClick={() => setConfirmDelete(th)}
             title={t("common.delete")}
           >
             🗑️
-          </button>
+          </IconButton>
         </div>
       ),
     },

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Sensor, Warehouse } from "../../types";
 import {
@@ -13,6 +13,8 @@ import Button from "../../components/Button";
 import Modal from "../../components/Modal";
 import FormField from "../../components/FormField";
 import { Toast, useToast } from "../../components/Toast";
+import IconButton from "../../components/IconButton";
+import StatusBadge from "../../components/StatusBadge";
 
 interface SensorForm {
   serial_number: string;
@@ -28,19 +30,6 @@ const emptyForm: SensorForm = {
   is_active: true,
 };
 
-const iconBtn: React.CSSProperties = {
-  width: 30,
-  height: 30,
-  borderRadius: 6,
-  border: "1.5px solid var(--gray-200)",
-  background: "#fff",
-  fontSize: 14,
-  cursor: "pointer",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-};
-
 export default function SensorsPage() {
   const { t } = useTranslation();
   const { toast, showToast, hideToast } = useToast();
@@ -54,7 +43,7 @@ export default function SensorsPage() {
   const [confirmDelete, setConfirmDelete] = useState<Sensor | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const [s, w] = await Promise.all([getAllSensors(), getAllWarehouses()]);
@@ -65,13 +54,13 @@ export default function SensorsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast, t]);
 
   useEffect(() => {
     (async () => {
       await load();
     })();
-  }, []);
+  }, [load]);
 
   const openCreate = () => {
     setEditingSensor(null);
@@ -148,18 +137,10 @@ export default function SensorsPage() {
       key: "is_active",
       label: t("common.status"),
       render: (s: Sensor) => (
-        <span
-          style={{
-            padding: "3px 10px",
-            borderRadius: 20,
-            fontSize: 11,
-            fontWeight: 600,
-            background: s.is_active ? "var(--green-100)" : "var(--red-100)",
-            color: s.is_active ? "var(--green-600)" : "var(--red-600)",
-          }}
-        >
-          {s.is_active ? t("common.active") : t("common.inactive")}
-        </span>
+        <StatusBadge
+          label={s.is_active ? t("common.active") : t("common.inactive")}
+          variant={s.is_active ? "success" : "danger"}
+        />
       ),
     },
     {
@@ -172,20 +153,15 @@ export default function SensorsPage() {
       label: t("common.actions"),
       render: (s: Sensor) => (
         <div style={{ display: "flex", gap: 6 }}>
-          <button
-            style={iconBtn}
-            onClick={() => openEdit(s)}
-            title={t("common.edit")}
-          >
+          <IconButton onClick={() => openEdit(s)} title={t("common.edit")}>
             ✏️
-          </button>
-          <button
-            style={iconBtn}
+          </IconButton>
+          <IconButton
             onClick={() => setConfirmDelete(s)}
             title={t("common.delete")}
           >
             🗑️
-          </button>
+          </IconButton>
         </div>
       ),
     },
