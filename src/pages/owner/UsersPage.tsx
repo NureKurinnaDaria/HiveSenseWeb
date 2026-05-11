@@ -21,7 +21,6 @@ interface UserForm {
   password: string;
   full_name: string;
   role: string;
-  is_active: boolean;
   warehouse_id: string;
 }
 
@@ -29,8 +28,7 @@ const emptyForm: UserForm = {
   email: "",
   password: "",
   full_name: "",
-  role: "worker",
-  is_active: true,
+  role: "EMPLOYEE",
   warehouse_id: "",
 };
 
@@ -84,27 +82,25 @@ export default function OwnerUsersPage() {
       email: user.email,
       password: "",
       full_name: user.full_name,
-      role:
-        user.role.toLowerCase() === "employee"
-          ? "worker"
-          : user.role.toLowerCase(),
-      is_active: user.is_active,
+      role: user.role,
       warehouse_id: user.warehouse_id ? String(user.warehouse_id) : "",
     });
     setShowModal(true);
-    (document.activeElement as HTMLElement)?.blur();
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
       if (editingUser) {
-        const payload: Parameters<typeof updateUser>[1] = {
+        const payload = {
           email: form.email,
           name: form.full_name,
           role: form.role,
-          is_active: form.is_active,
-          warehouse_id: form.warehouse_id ? Number(form.warehouse_id) : null,
+          is_active: true,
+          warehouse_id: form.warehouse_id
+            ? Number(form.warehouse_id)
+            : undefined,
+          ...(form.password ? { password: form.password } : {}),
         };
         if (form.password) payload.password = form.password;
         await updateUser(editingUser.user_id, payload);
@@ -114,7 +110,7 @@ export default function OwnerUsersPage() {
           password: form.password,
           name: form.full_name,
           role: form.role,
-          is_active: form.is_active,
+          is_active: true,
           warehouse_id: form.warehouse_id
             ? Number(form.warehouse_id)
             : undefined,
@@ -180,9 +176,9 @@ export default function OwnerUsersPage() {
   ];
 
   const roleOptions = [
-    { value: "worker", label: t("roles.EMPLOYEE") },
-    { value: "admin", label: t("roles.ADMIN") },
-    { value: "owner", label: t("roles.OWNER") },
+    { value: "EMPLOYEE", label: t("roles.EMPLOYEE") },
+    { value: "ADMIN", label: t("roles.ADMIN") },
+    { value: "OWNER", label: t("roles.OWNER") },
   ];
 
   const columns = [

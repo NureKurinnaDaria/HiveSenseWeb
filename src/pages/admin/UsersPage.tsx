@@ -28,7 +28,7 @@ const emptyForm: UserForm = {
   email: "",
   password: "",
   full_name: "",
-  role: "worker",
+  role: "EMPLOYEE",
   warehouse_id: "",
 };
 
@@ -78,13 +78,14 @@ export default function UsersPage() {
     setForm(emptyForm);
     setShowModal(true);
   };
+
   const openEdit = (user: User) => {
     setEditingUser(user);
     setForm({
       email: user.email,
       password: "",
       full_name: user.full_name,
-      role: user.role.toLowerCase(),
+      role: user.role,
       warehouse_id: user.warehouse_id ? String(user.warehouse_id) : "",
     });
     setShowModal(true);
@@ -96,7 +97,7 @@ export default function UsersPage() {
       const payload = {
         email: form.email,
         name: form.full_name,
-        role: form.role as "worker" | "admin" | "owner",
+        role: form.role,
         is_active: true,
         warehouse_id: form.warehouse_id ? Number(form.warehouse_id) : undefined,
         ...(form.password ? { password: form.password } : {}),
@@ -185,9 +186,9 @@ export default function UsersPage() {
     ...warehouses.map((w) => ({ value: w.warehouse_id, label: w.name })),
   ];
   const roleOptions = [
-    { value: "worker", label: t("roles.EMPLOYEE") },
-    { value: "admin", label: t("roles.ADMIN") },
-    { value: "owner", label: t("roles.OWNER") },
+    { value: "EMPLOYEE", label: t("roles.EMPLOYEE") },
+    { value: "ADMIN", label: t("roles.ADMIN") },
+    { value: "OWNER", label: t("roles.OWNER") },
   ];
 
   const columns = [
