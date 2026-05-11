@@ -4,7 +4,6 @@ import type { AuditLog } from "../../types";
 import { getAuditLogs } from "../../api/index";
 import Table from "../../components/Table";
 import Button from "../../components/Button";
-import Modal from "../../components/Modal";
 
 export default function AuditPage() {
   const { t, i18n } = useTranslation();
@@ -12,7 +11,6 @@ export default function AuditPage() {
   const [loading, setLoading] = useState(true);
   const [filterEntity, setFilterEntity] = useState("");
   const [filterAction, setFilterAction] = useState("");
-  const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -109,39 +107,17 @@ export default function AuditPage() {
 
   const columns = [
     { key: "id", label: "ID" },
-    { key: "entity", label: "Сутність" },
+    { key: "entity", label: t("common.entity") },
     {
       key: "action",
-      label: "Дія",
+      label: t("common.action"),
       render: (l: AuditLog) => actionBadge(l.action),
     },
-    { key: "actor_user_id", label: "Користувач ID" },
+    { key: "actor_user_id", label: t("common.user_id") },
     {
       key: "created_at",
-      label: "Дата",
+      label: t("common.date"),
       render: (l: AuditLog) => formatDate(l.created_at),
-    },
-    {
-      key: "payload",
-      label: "Дані",
-      render: (l: AuditLog) => (
-        <span
-          style={{
-            fontSize: 12,
-            color: "var(--gray-500)",
-            cursor: "pointer",
-            maxWidth: 200,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            display: "block",
-          }}
-          onClick={() => setSelectedLog(l)}
-          title="Натисни для перегляду"
-        >
-          {JSON.stringify(l.payload)}
-        </span>
-      ),
     },
   ];
 
@@ -160,13 +136,21 @@ export default function AuditPage() {
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <input
             style={inputStyle}
-            placeholder="Сутність (users, sensors...)"
+            placeholder={
+              i18n.language === "uk"
+                ? "Сутність (users, sensors...)"
+                : "Entity (users, sensors...)"
+            }
             value={filterEntity}
             onChange={(e) => setFilterEntity(e.target.value)}
           />
           <input
             style={inputStyle}
-            placeholder="Дія (create, update...)"
+            placeholder={
+              i18n.language === "uk"
+                ? "Дія (create, update...)"
+                : "Action (create, update...)"
+            }
             value={filterAction}
             onChange={(e) => setFilterAction(e.target.value)}
           />
@@ -190,27 +174,6 @@ export default function AuditPage() {
         loading={loading}
         rowKey={(l) => l.id}
       />
-
-      {selectedLog && (
-        <Modal
-          title={`Payload — ${selectedLog.entity} / ${selectedLog.action}`}
-          onClose={() => setSelectedLog(null)}
-        >
-          <pre
-            style={{
-              fontSize: 12,
-              color: "var(--gray-700)",
-              background: "var(--gray-100)",
-              padding: 16,
-              borderRadius: 8,
-              overflow: "auto",
-              maxHeight: 400,
-            }}
-          >
-            {JSON.stringify(selectedLog.payload, null, 2)}
-          </pre>
-        </Modal>
-      )}
     </div>
   );
 }

@@ -68,6 +68,11 @@ const resources = {
         warehouse: "Склад",
         all_warehouses: "Всі склади",
         all_entities: "Всі сутності",
+        date: "Дата і час",
+        entity: "Сутність",
+        action: "Дія",
+        serial_number: "Серійний номер",
+        user_id: "Користувач ID",
       },
       roles: {
         ADMIN: "Адміністратор",
@@ -105,6 +110,8 @@ const resources = {
         temp_max: "Макс. температура",
         humidity_min: "Мін. вологість",
         humidity_max: "Макс. вологість",
+        temperature: "Температура (°C)",
+        humidity: "Вологість (%)",
       },
       dashboard: {
         total_warehouses: "всього складів",
@@ -199,6 +206,7 @@ const resources = {
         resolved_at: "Closed",
         all_warehouses: "All warehouses",
         all_entities: "All entities",
+        user_id: "User ID",
       },
       roles: {
         ADMIN: "Administrator",
@@ -236,6 +244,8 @@ const resources = {
         temp_max: "Max temperature",
         humidity_min: "Min humidity",
         humidity_max: "Max humidity",
+        temperature: "Temperature (°C)",
+        humidity: "Humidity (%)",
       },
       dashboard: {
         total_warehouses: "total warehouses",

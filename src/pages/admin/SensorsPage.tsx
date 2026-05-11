@@ -125,9 +125,9 @@ export default function SensorsPage() {
   ];
 
   const columns = [
-    { key: "sensor_id", label: "ID" },
-    { key: "serial_number", label: "Серійний номер" },
-    { key: "type", label: "Тип" },
+    { key: "sensor_id", label: t("ID") },
+    { key: "serial_number", label: t("sensor.serial") },
+    { key: "type", label: t("sensor.type") },
     {
       key: "is_active",
       label: t("common.status"),
@@ -148,7 +148,7 @@ export default function SensorsPage() {
     },
     {
       key: "warehouse_id",
-      label: "Склад",
+      label: t("common.warehouse"),
       render: (s: Sensor) => getWarehouseName(s.warehouse_id),
     },
     {
@@ -225,20 +225,20 @@ export default function SensorsPage() {
           }
         >
           <FormField
-            label="Серійний номер"
+            label={t("sensor.serial_number")}
             value={form.serial_number}
             onChange={(v) => setForm((f) => ({ ...f, serial_number: v }))}
-            placeholder="SN-001-XYZ"
+            placeholder={t("sensor.serial_number_placeholder")}
             required
           />
           <FormField
-            label="Тип датчика"
+            label={t("sensor.type")}
             value={form.type}
             onChange={(v) => setForm((f) => ({ ...f, type: v }))}
-            options={[{ value: "COMBINED", label: "COMBINED" }]}
+            options={[{ value: "COMBINED", label: t("sensor.combined") }]}
           />
           <FormField
-            label="Склад"
+            label={t("common.warehouse")}
             value={form.warehouse_id}
             onChange={(v) => setForm((f) => ({ ...f, warehouse_id: v }))}
             options={warehouseOptions}

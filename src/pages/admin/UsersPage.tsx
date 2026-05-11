@@ -46,7 +46,7 @@ const iconBtn: React.CSSProperties = {
 };
 
 export default function UsersPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
@@ -191,7 +191,7 @@ export default function UsersPage() {
   ];
 
   const columns = [
-    { key: "full_name", label: "Ім'я" },
+    { key: "full_name", label: i18n.language === "uk" ? "Ім'я" : "Name" },
     { key: "email", label: "Email" },
     {
       key: "role",
@@ -205,7 +205,7 @@ export default function UsersPage() {
     },
     {
       key: "warehouse",
-      label: "Склад",
+      label: i18n.language === "uk" ? "Склад" : "Warehouse",
       render: (u: User) => u.warehouse?.name ?? "—",
     },
     {
@@ -302,7 +302,7 @@ export default function UsersPage() {
           }
         >
           <FormField
-            label="Ім'я"
+            label={i18n.language === "uk" ? "Ім'я" : "Name"}
             value={form.full_name}
             onChange={(v) => setForm((f) => ({ ...f, full_name: v }))}
             required
@@ -329,7 +329,7 @@ export default function UsersPage() {
             options={roleOptions}
           />
           <FormField
-            label="Склад"
+            label={i18n.language === "uk" ? "Склад" : "Warehouse"}
             value={form.warehouse_id}
             onChange={(v) => setForm((f) => ({ ...f, warehouse_id: v }))}
             options={warehouseOptions}

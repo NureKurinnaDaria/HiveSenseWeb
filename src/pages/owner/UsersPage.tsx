@@ -44,7 +44,7 @@ const iconBtn: React.CSSProperties = {
 };
 
 export default function OwnerUsersPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
@@ -187,21 +187,21 @@ export default function OwnerUsersPage() {
 
   const columns = [
     { key: "user_id", label: "ID" },
-    { key: "full_name", label: t("common.full_name") },
-    { key: "email", label: t("common.email") },
+    { key: "full_name", label: i18n.language === "uk" ? "Ім'я" : "Name" },
+    { key: "email", label: i18n.language === "uk" ? "Email" : "Email" },
     {
       key: "role",
-      label: t("common.role"),
+      label: i18n.language === "uk" ? "Роль" : "Role",
       render: (u: User) => roleBadge(u.role),
     },
     {
       key: "warehouse_id",
-      label: t("common.warehouse"),
+      label: i18n.language === "uk" ? "Склад" : "Warehouse",
       render: (u: User) => getWarehouseName(u.warehouse_id),
     },
     {
       key: "is_active",
-      label: t("common.status"),
+      label: i18n.language === "uk" ? "Статус" : "Status",
       render: (u: User) => (
         <span
           style={{
@@ -219,7 +219,7 @@ export default function OwnerUsersPage() {
     },
     {
       key: "actions",
-      label: t("common.actions"),
+      label: i18n.language === "uk" ? "Дії" : "Actions",
       render: (u: User) => {
         const isSelf =
           u.user_id === currentUser?.user_id ||
@@ -308,20 +308,20 @@ export default function OwnerUsersPage() {
           }
         >
           <FormField
-            label={t("common.full_name")}
+            label={i18n.language === "uk" ? "Ім'я" : "Name"}
             value={form.full_name}
             onChange={(v) => setForm((f) => ({ ...f, full_name: v }))}
             required
           />
           <FormField
-            label={t("common.email")}
+            label={i18n.language === "uk" ? "Email" : "Email"}
             type="email"
             value={form.email}
             onChange={(v) => setForm((f) => ({ ...f, email: v }))}
             required
           />
           <FormField
-            label={t("common.password")}
+            label={i18n.language === "uk" ? "Пароль" : "Password"}
             type="password"
             value={form.password}
             onChange={(v) => setForm((f) => ({ ...f, password: v }))}
@@ -329,13 +329,13 @@ export default function OwnerUsersPage() {
             required={!editingUser}
           />
           <FormField
-            label={t("common.role")}
+            label={i18n.language === "uk" ? "Роль" : "Role"}
             value={form.role}
             onChange={(v) => setForm((f) => ({ ...f, role: v }))}
             options={roleOptions}
           />
           <FormField
-            label={t("common.warehouse")}
+            label={i18n.language === "uk" ? "Склад" : "Warehouse"}
             value={form.warehouse_id}
             onChange={(v) => setForm((f) => ({ ...f, warehouse_id: v }))}
             options={warehouseOptions}

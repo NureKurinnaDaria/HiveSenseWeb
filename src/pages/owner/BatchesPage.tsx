@@ -158,7 +158,7 @@ export default function BatchesPage() {
 
   const exportCSV = () => {
     const headers = [
-      t("batch.batch_id"),
+      t("ID"),
       t("batch.variety"),
       t("batch.quantity"),
       t("batch.received"),
@@ -200,7 +200,7 @@ export default function BatchesPage() {
   ];
 
   const columns = [
-    { key: "batch_id", label: t("batch.batch_id") },
+    { key: "batch_id", label: t("ID") },
     { key: "variety", label: t("batch.variety") },
     { key: "quantity_kg", label: t("batch.quantity") },
     {

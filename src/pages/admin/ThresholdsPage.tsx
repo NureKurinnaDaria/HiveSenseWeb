@@ -136,17 +136,17 @@ export default function ThresholdsPage() {
   const columns = [
     {
       key: "warehouse_id",
-      label: "Склад",
+      label: t("common.warehouse"),
       render: (th: Threshold) => getWarehouseName(th.warehouse_id),
     },
     {
       key: "temperature",
-      label: "Температура (°C)",
+      label: t("threshold.temperature"),
       render: (th: Threshold) => rangeCell(th.temp_min, th.temp_max),
     },
     {
       key: "humidity",
-      label: "Вологість (%)",
+      label: t("threshold.humidity"),
       render: (th: Threshold) => rangeCell(th.humidity_min, th.humidity_max),
     },
     {
@@ -215,7 +215,7 @@ export default function ThresholdsPage() {
         >
           {!editingThreshold && (
             <FormField
-              label="Склад"
+              label={t("common.warehouse")}
               value={form.warehouse_id}
               onChange={(v) => setForm((f) => ({ ...f, warehouse_id: v }))}
               options={warehouseOptions}
