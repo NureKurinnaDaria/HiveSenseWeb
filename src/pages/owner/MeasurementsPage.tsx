@@ -5,9 +5,11 @@ import { getMeasurements } from "../../api/index";
 import { getAllWarehouses } from "../../api/warehouses";
 import Table from "../../components/Table";
 import Button from "../../components/Button";
+import { Toast, useToast } from "../../components/Toast";
 
 export default function MeasurementsPage() {
   const { t, i18n } = useTranslation();
+  const { toast, showToast, hideToast } = useToast();
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,6 +21,8 @@ export default function MeasurementsPage() {
       const [m, w] = await Promise.all([getMeasurements(), getAllWarehouses()]);
       setMeasurements(m);
       setWarehouses(w);
+    } catch {
+      showToast(t("common.load_error"), "error");
     } finally {
       setLoading(false);
     }
@@ -131,6 +135,9 @@ export default function MeasurementsPage() {
         loading={loading}
         rowKey={(m) => m.measurement_id}
       />
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={hideToast} />
+      )}
     </div>
   );
 }

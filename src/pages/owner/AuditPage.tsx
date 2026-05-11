@@ -4,9 +4,11 @@ import type { AuditLog } from "../../types";
 import { getAuditLogs } from "../../api/index";
 import Table from "../../components/Table";
 import Button from "../../components/Button";
+import { Toast, useToast } from "../../components/Toast";
 
 export default function AuditPage() {
   const { t, i18n } = useTranslation();
+  const { toast, showToast, hideToast } = useToast();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterEntity, setFilterEntity] = useState("");
@@ -15,6 +17,7 @@ export default function AuditPage() {
     setLoading(true);
     getAuditLogs()
       .then(setLogs)
+      .catch(() => showToast(t("common.load_error"), "error"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -76,7 +79,7 @@ export default function AuditPage() {
     },
     {
       key: "actor_user_id",
-      label: t("nav.users"),
+      label: t("common.user_id"),
       render: (l: AuditLog) => `#${l.actor_user_id}`,
     },
     {
@@ -117,12 +120,17 @@ export default function AuditPage() {
           JSON
         </Button>
       </div>
+
       <Table
         columns={columns}
         data={filtered}
         loading={loading}
         rowKey={(l) => l.id}
       />
+
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={hideToast} />
+      )}
     </div>
   );
 }

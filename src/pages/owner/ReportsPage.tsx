@@ -23,10 +23,12 @@ export default function ReportsPage() {
   const [dateTo, setDateTo] = useState(today);
 
   useEffect(() => {
-    getAllWarehouses().then((w) => {
-      setWarehouses(w);
-      if (w.length > 0) setSelected(w[0].warehouse_id);
-    });
+    getAllWarehouses()
+      .then((w) => {
+        setWarehouses(w);
+        if (w.length > 0) setSelected(w[0].warehouse_id);
+      })
+      .catch(() => {}); // тихо, без Toast
   }, []);
 
   useEffect(() => {
@@ -42,6 +44,7 @@ export default function ReportsPage() {
         setAlerts(a);
         setBatches(b);
       })
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, [selected]);
 
@@ -54,7 +57,10 @@ export default function ReportsPage() {
     inRange(m.measured_at),
   );
   const filteredAlerts = alerts.filter((a) => inRange(a.created_at));
-  const filteredBatches = batches.filter((b) => inRange(b.received_date));
+
+  const filteredBatches = batches.filter(
+    (b) => inRange(b.received_date) && b.warehouse_id === selected,
+  );
 
   const formatDate = (dateStr: string) =>
     new Date(dateStr).toLocaleString(
@@ -175,7 +181,7 @@ export default function ReportsPage() {
   const measurementColumns = [
     {
       key: "measured_at",
-      label: t("common.actions"),
+      label: t("common.date"),
       render: (m: Measurement) => formatDate(m.measured_at),
     },
     { key: "temperature_c", label: `${t("dashboard.temperature")} (°C)` },
@@ -191,7 +197,7 @@ export default function ReportsPage() {
     { key: "alert_id", label: "ID" },
     {
       key: "type",
-      label: t("common.role"),
+      label: t("common.type"),
       render: (a: Alert) => t(`alert.${a.type}`),
     },
     {
@@ -225,7 +231,7 @@ export default function ReportsPage() {
     },
     {
       key: "created_at",
-      label: t("batch.received"),
+      label: t("common.date"),
       render: (a: Alert) => formatDate(a.created_at),
     },
   ];

@@ -12,6 +12,7 @@ import Table from "../../components/Table";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
 import FormField from "../../components/FormField";
+import { Toast, useToast } from "../../components/Toast";
 
 interface BatchForm {
   variety: string;
@@ -55,6 +56,7 @@ export default function BatchesPage() {
   const [form, setForm] = useState<BatchForm>(emptyForm);
   const [confirmDelete, setConfirmDelete] = useState<HoneyBatch | null>(null);
   const [saving, setSaving] = useState(false);
+  const { toast, showToast, hideToast } = useToast();
 
   const load = async () => {
     setLoading(true);
@@ -62,6 +64,8 @@ export default function BatchesPage() {
       const [b, w] = await Promise.all([getHoneyBatches(), getAllWarehouses()]);
       setBatches(b);
       setWarehouses(w);
+    } catch {
+      showToast(t("common.load_error"), "error");
     } finally {
       setLoading(false);
     }
@@ -76,6 +80,7 @@ export default function BatchesPage() {
     setForm(emptyForm);
     setShowModal(true);
   };
+
   const openEdit = (batch: HoneyBatch) => {
     setEditingBatch(batch);
     setForm({
@@ -105,8 +110,11 @@ export default function BatchesPage() {
       } else {
         await createHoneyBatch(payload);
       }
+      showToast(t("common.save_success"), "success");
       setShowModal(false);
       await load();
+    } catch {
+      showToast(t("common.save_error"), "error");
     } finally {
       setSaving(false);
     }
@@ -114,9 +122,14 @@ export default function BatchesPage() {
 
   const handleDelete = async () => {
     if (!confirmDelete) return;
-    await deleteHoneyBatch(confirmDelete.batch_id);
-    setConfirmDelete(null);
-    await load();
+    try {
+      await deleteHoneyBatch(confirmDelete.batch_id);
+      showToast(t("common.delete_success"), "success");
+      setConfirmDelete(null);
+      await load();
+    } catch {
+      showToast(t("common.delete_error"), "error");
+    }
   };
 
   const formatDate = (dateStr: string) => {
@@ -158,7 +171,7 @@ export default function BatchesPage() {
 
   const exportCSV = () => {
     const headers = [
-      t("ID"),
+      "ID",
       t("batch.variety"),
       t("batch.quantity"),
       t("batch.received"),
@@ -193,6 +206,7 @@ export default function BatchesPage() {
     { value: "", label: "—" },
     ...warehouses.map((w) => ({ value: w.warehouse_id, label: w.name })),
   ];
+
   const statusOptions = [
     { value: "ACTIVE", label: t("batch.ACTIVE") },
     { value: "EXPIRED", label: t("batch.EXPIRED") },
@@ -200,7 +214,7 @@ export default function BatchesPage() {
   ];
 
   const columns = [
-    { key: "batch_id", label: t("ID") },
+    { key: "batch_id", label: "ID" },
     { key: "variety", label: t("batch.variety") },
     { key: "quantity_kg", label: t("batch.quantity") },
     {
@@ -363,6 +377,10 @@ export default function BatchesPage() {
             <strong>{confirmDelete.variety}</strong>?
           </p>
         </Modal>
+      )}
+
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={hideToast} />
       )}
     </div>
   );

@@ -5,9 +5,11 @@ import { getAlerts } from "../../api/index";
 import { getAllWarehouses } from "../../api/warehouses";
 import Table from "../../components/Table";
 import Button from "../../components/Button";
+import { Toast, useToast } from "../../components/Toast";
 
 export default function AlertsPage() {
   const { t, i18n } = useTranslation();
+  const { toast, showToast, hideToast } = useToast();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,6 +21,8 @@ export default function AlertsPage() {
       const [a, w] = await Promise.all([getAlerts(), getAllWarehouses()]);
       setAlerts(a);
       setWarehouses(w);
+    } catch {
+      showToast(t("common.load_error"), "error");
     } finally {
       setLoading(false);
     }
@@ -180,12 +184,17 @@ export default function AlertsPage() {
           CSV
         </Button>
       </div>
+
       <Table
         columns={columns}
         data={filtered}
         loading={loading}
         rowKey={(a) => a.alert_id}
       />
+
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={hideToast} />
+      )}
     </div>
   );
 }

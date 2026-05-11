@@ -73,6 +73,12 @@ const resources = {
         action: "Дія",
         serial_number: "Серійний номер",
         user_id: "Користувач ID",
+        leave_blank: "(залиш порожнім щоб не змінювати)",
+        save_success: "Збережено успішно",
+        delete_success: "Видалено успішно",
+        save_error: "Помилка збереження",
+        delete_error: "Помилка видалення",
+        load_error: "Помилка завантаження даних",
       },
       roles: {
         ADMIN: "Адміністратор",
@@ -112,6 +118,9 @@ const resources = {
         humidity_max: "Макс. вологість",
         temperature: "Температура (°C)",
         humidity: "Вологість (%)",
+        description:
+          "Порогові значення температури та вологості для кожного складу",
+        confirm_delete_label: "порогові значення для складу",
       },
       dashboard: {
         total_warehouses: "всього складів",
@@ -141,6 +150,10 @@ const resources = {
       sensor: {
         serial: "Серійний номер",
         type: "Тип датчика",
+      },
+      audit: {
+        filter_entity: "Сутність (users, sensors...)",
+        filter_action: "Дія (create, update, delete...)",
       },
     },
   },
@@ -207,6 +220,12 @@ const resources = {
         all_warehouses: "All warehouses",
         all_entities: "All entities",
         user_id: "User ID",
+        leave_blank: "(leave blank to keep unchanged)",
+        save_success: "Saved successfully",
+        delete_success: "Deleted successfully",
+        save_error: "Save error",
+        delete_error: "Delete error",
+        load_error: "Failed to load data",
       },
       roles: {
         ADMIN: "Administrator",
@@ -246,6 +265,8 @@ const resources = {
         humidity_max: "Max humidity",
         temperature: "Temperature (°C)",
         humidity: "Humidity (%)",
+        description: "Temperature and humidity thresholds for each warehouse",
+        confirm_delete_label: "thresholds for warehouse",
       },
       dashboard: {
         total_warehouses: "total warehouses",
@@ -275,6 +296,10 @@ const resources = {
       sensor: {
         serial: "Serial number",
         type: "Sensor type",
+      },
+      audit: {
+        filter_entity: "Entity (users, sensors...)",
+        filter_action: "Action (create, update, delete...)",
       },
     },
   },

@@ -15,6 +15,7 @@ import Button from "../../components/Button";
 import Modal from "../../components/Modal";
 import FormField from "../../components/FormField";
 import { useAuth } from "../../context/AuthContext";
+import { Toast, useToast } from "../../components/Toast";
 
 interface UserForm {
   email: string;
@@ -53,6 +54,7 @@ export default function OwnerUsersPage() {
   const [form, setForm] = useState<UserForm>(emptyForm);
   const [confirmDelete, setConfirmDelete] = useState<User | null>(null);
   const [saving, setSaving] = useState(false);
+  const { toast, showToast, hideToast } = useToast();
 
   const load = async () => {
     setLoading(true);
@@ -60,6 +62,8 @@ export default function OwnerUsersPage() {
       const [u, w] = await Promise.all([getAllUsers(), getAllWarehouses()]);
       setUsers(u);
       setWarehouses(w);
+    } catch {
+      showToast(t("common.load_error"), "error");
     } finally {
       setLoading(false);
     }
@@ -102,7 +106,6 @@ export default function OwnerUsersPage() {
             : undefined,
           ...(form.password ? { password: form.password } : {}),
         };
-        if (form.password) payload.password = form.password;
         await updateUser(editingUser.user_id, payload);
       } else {
         await createUser({
@@ -116,25 +119,37 @@ export default function OwnerUsersPage() {
             : undefined,
         });
       }
+      showToast(t("common.save_success"), "success");
       setShowModal(false);
       await load();
+    } catch {
+      showToast(t("common.save_error"), "error");
     } finally {
       setSaving(false);
     }
   };
 
   const handleToggleBlock = async (user: User) => {
-    user.is_active
-      ? await blockUser(user.user_id)
-      : await unblockUser(user.user_id);
-    await load();
+    try {
+      user.is_active
+        ? await blockUser(user.user_id)
+        : await unblockUser(user.user_id);
+      await load();
+    } catch {
+      showToast(t("common.save_error"), "error");
+    }
   };
 
   const handleDelete = async () => {
     if (!confirmDelete) return;
-    await deleteUser(confirmDelete.user_id);
-    setConfirmDelete(null);
-    await load();
+    try {
+      await deleteUser(confirmDelete.user_id);
+      showToast(t("common.delete_success"), "success");
+      setConfirmDelete(null);
+      await load();
+    } catch {
+      showToast(t("common.delete_error"), "error");
+    }
   };
 
   const getWarehouseName = (id: number | null) =>
@@ -184,20 +199,20 @@ export default function OwnerUsersPage() {
   const columns = [
     { key: "user_id", label: "ID" },
     { key: "full_name", label: i18n.language === "uk" ? "Ім'я" : "Name" },
-    { key: "email", label: i18n.language === "uk" ? "Email" : "Email" },
+    { key: "email", label: "Email" },
     {
       key: "role",
-      label: i18n.language === "uk" ? "Роль" : "Role",
+      label: t("common.role"),
       render: (u: User) => roleBadge(u.role),
     },
     {
       key: "warehouse_id",
-      label: i18n.language === "uk" ? "Склад" : "Warehouse",
+      label: t("common.warehouse"),
       render: (u: User) => getWarehouseName(u.warehouse_id),
     },
     {
       key: "is_active",
-      label: i18n.language === "uk" ? "Статус" : "Status",
+      label: t("common.status"),
       render: (u: User) => (
         <span
           style={{
@@ -215,7 +230,7 @@ export default function OwnerUsersPage() {
     },
     {
       key: "actions",
-      label: i18n.language === "uk" ? "Дії" : "Actions",
+      label: t("common.actions"),
       render: (u: User) => {
         const isSelf =
           u.user_id === currentUser?.user_id ||
@@ -310,14 +325,14 @@ export default function OwnerUsersPage() {
             required
           />
           <FormField
-            label={i18n.language === "uk" ? "Email" : "Email"}
+            label="Email"
             type="email"
             value={form.email}
             onChange={(v) => setForm((f) => ({ ...f, email: v }))}
             required
           />
           <FormField
-            label={i18n.language === "uk" ? "Пароль" : "Password"}
+            label={t("common.password")}
             type="password"
             value={form.password}
             onChange={(v) => setForm((f) => ({ ...f, password: v }))}
@@ -325,13 +340,13 @@ export default function OwnerUsersPage() {
             required={!editingUser}
           />
           <FormField
-            label={i18n.language === "uk" ? "Роль" : "Role"}
+            label={t("common.role")}
             value={form.role}
             onChange={(v) => setForm((f) => ({ ...f, role: v }))}
             options={roleOptions}
           />
           <FormField
-            label={i18n.language === "uk" ? "Склад" : "Warehouse"}
+            label={t("common.warehouse")}
             value={form.warehouse_id}
             onChange={(v) => setForm((f) => ({ ...f, warehouse_id: v }))}
             options={warehouseOptions}
@@ -359,6 +374,10 @@ export default function OwnerUsersPage() {
             <strong>{confirmDelete.full_name}</strong>?
           </p>
         </Modal>
+      )}
+
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={hideToast} />
       )}
     </div>
   );

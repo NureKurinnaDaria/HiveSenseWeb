@@ -26,6 +26,8 @@ export default function DashboardPage() {
         setAlerts(a);
         setMeasurements(m);
         setBatches(b);
+      } catch {
+        // тихо — dashboard показує порожні дані
       } finally {
         setLoading(false);
       }

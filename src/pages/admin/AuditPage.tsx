@@ -4,9 +4,11 @@ import type { AuditLog } from "../../types";
 import { getAuditLogs } from "../../api/index";
 import Table from "../../components/Table";
 import Button from "../../components/Button";
+import { Toast, useToast } from "../../components/Toast";
 
 export default function AuditPage() {
   const { t, i18n } = useTranslation();
+  const { toast, showToast, hideToast } = useToast();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterEntity, setFilterEntity] = useState("");
@@ -20,6 +22,8 @@ export default function AuditPage() {
         action: filterAction || undefined,
       });
       setLogs(data);
+    } catch {
+      showToast(t("common.load_error"), "error");
     } finally {
       setLoading(false);
     }
@@ -136,21 +140,13 @@ export default function AuditPage() {
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <input
             style={inputStyle}
-            placeholder={
-              i18n.language === "uk"
-                ? "Сутність (users, sensors...)"
-                : "Entity (users, sensors...)"
-            }
+            placeholder={t("audit.filter_entity")}
             value={filterEntity}
             onChange={(e) => setFilterEntity(e.target.value)}
           />
           <input
             style={inputStyle}
-            placeholder={
-              i18n.language === "uk"
-                ? "Дія (create, update...)"
-                : "Action (create, update...)"
-            }
+            placeholder={t("audit.filter_action")}
             value={filterAction}
             onChange={(e) => setFilterAction(e.target.value)}
           />
@@ -174,6 +170,10 @@ export default function AuditPage() {
         loading={loading}
         rowKey={(l) => l.id}
       />
+
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={hideToast} />
+      )}
     </div>
   );
 }

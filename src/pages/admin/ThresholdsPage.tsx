@@ -12,6 +12,7 @@ import Table from "../../components/Table";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
 import FormField from "../../components/FormField";
+import { Toast, useToast } from "../../components/Toast";
 
 interface ThresholdForm {
   warehouse_id: string;
@@ -28,6 +29,7 @@ const emptyForm: ThresholdForm = {
   humidity_min: "",
   humidity_max: "",
 };
+
 const iconBtn: React.CSSProperties = {
   width: 30,
   height: 30,
@@ -43,6 +45,7 @@ const iconBtn: React.CSSProperties = {
 
 export default function ThresholdsPage() {
   const { t } = useTranslation();
+  const { toast, showToast, hideToast } = useToast();
   const [thresholds, setThresholds] = useState<Threshold[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,6 +66,8 @@ export default function ThresholdsPage() {
       ]);
       setThresholds(th);
       setWarehouses(w);
+    } catch {
+      showToast(t("common.load_error"), "error");
     } finally {
       setLoading(false);
     }
@@ -77,6 +82,7 @@ export default function ThresholdsPage() {
     setForm(emptyForm);
     setShowModal(true);
   };
+
   const openEdit = (th: Threshold) => {
     setEditingThreshold(th);
     setForm({
@@ -104,8 +110,11 @@ export default function ThresholdsPage() {
       } else {
         await createThreshold(payload);
       }
+      showToast(t("common.save_success"), "success");
       setShowModal(false);
       await load();
+    } catch {
+      showToast(t("common.save_error"), "error");
     } finally {
       setSaving(false);
     }
@@ -113,13 +122,19 @@ export default function ThresholdsPage() {
 
   const handleDelete = async () => {
     if (!confirmDelete) return;
-    await deleteThreshold(confirmDelete.warehouse_id);
-    setConfirmDelete(null);
-    await load();
+    try {
+      await deleteThreshold(confirmDelete.warehouse_id);
+      showToast(t("common.delete_success"), "success");
+      setConfirmDelete(null);
+      await load();
+    } catch {
+      showToast(t("common.delete_error"), "error");
+    }
   };
 
   const getWarehouseName = (id: number) =>
     warehouses.find((w) => w.warehouse_id === id)?.name ?? "—";
+
   const warehouseOptions = [
     { value: "", label: "—" },
     ...warehouses.map((w) => ({ value: w.warehouse_id, label: w.name })),
@@ -184,7 +199,7 @@ export default function ThresholdsPage() {
         }}
       >
         <span style={{ fontSize: 14, color: "var(--gray-500)" }}>
-          Порогові значення температури та вологості для кожного складу
+          {t("threshold.description")}
         </span>
         <Button icon="+" onClick={openCreate}>
           {t("common.create")}
@@ -269,10 +284,14 @@ export default function ThresholdsPage() {
           }
         >
           <p style={{ fontSize: 14, color: "var(--gray-700)" }}>
-            {t("common.confirm_delete")} порогові значення для складу{" "}
+            {t("common.confirm_delete")} {t("threshold.confirm_delete_label")}{" "}
             <strong>{getWarehouseName(confirmDelete.warehouse_id)}</strong>?
           </p>
         </Modal>
+      )}
+
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={hideToast} />
       )}
     </div>
   );

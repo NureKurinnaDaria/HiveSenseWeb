@@ -15,6 +15,7 @@ import Button from "../../components/Button";
 import Modal from "../../components/Modal";
 import FormField from "../../components/FormField";
 import { useAuth } from "../../context/AuthContext";
+import { Toast, useToast } from "../../components/Toast";
 
 interface UserForm {
   email: string;
@@ -57,6 +58,7 @@ export default function UsersPage() {
   const [form, setForm] = useState<UserForm>(emptyForm);
   const [confirmDelete, setConfirmDelete] = useState<User | null>(null);
   const [saving, setSaving] = useState(false);
+  const { toast, showToast, hideToast } = useToast();
 
   const load = async () => {
     setLoading(true);
@@ -64,6 +66,8 @@ export default function UsersPage() {
       const [u, w] = await Promise.all([getAllUsers(), getAllWarehouses()]);
       setUsers(u);
       setWarehouses(w);
+    } catch {
+      showToast(t("common.load_error"), "error");
     } finally {
       setLoading(false);
     }
@@ -114,25 +118,37 @@ export default function UsersPage() {
           warehouse_id: payload.warehouse_id,
         });
       }
+      showToast(t("common.save_success"), "success");
       setShowModal(false);
       await load();
+    } catch {
+      showToast(t("common.save_error"), "error");
     } finally {
       setSaving(false);
     }
   };
 
   const handleBlock = async (user: User) => {
-    user.is_active
-      ? await blockUser(user.user_id)
-      : await unblockUser(user.user_id);
-    await load();
+    try {
+      user.is_active
+        ? await blockUser(user.user_id)
+        : await unblockUser(user.user_id);
+      await load();
+    } catch {
+      showToast(t("common.save_error"), "error");
+    }
   };
 
   const handleDelete = async () => {
     if (!confirmDelete) return;
-    await deleteUser(confirmDelete.user_id);
-    setConfirmDelete(null);
-    await load();
+    try {
+      await deleteUser(confirmDelete.user_id);
+      showToast(t("common.delete_success"), "success");
+      setConfirmDelete(null);
+      await load();
+    } catch {
+      showToast(t("common.delete_error"), "error");
+    }
   };
 
   const filtered = users.filter(
@@ -185,6 +201,7 @@ export default function UsersPage() {
     { value: "", label: "—" },
     ...warehouses.map((w) => ({ value: w.warehouse_id, label: w.name })),
   ];
+
   const roleOptions = [
     { value: "EMPLOYEE", label: t("roles.EMPLOYEE") },
     { value: "ADMIN", label: t("roles.ADMIN") },
@@ -206,7 +223,7 @@ export default function UsersPage() {
     },
     {
       key: "warehouse",
-      label: i18n.language === "uk" ? "Склад" : "Warehouse",
+      label: t("common.warehouse"),
       render: (u: User) => u.warehouse?.name ?? "—",
     },
     {
@@ -316,11 +333,11 @@ export default function UsersPage() {
             required
           />
           <FormField
-            label={t("login.password")}
+            label={t("common.password")}
             type="password"
             value={form.password}
             onChange={(v) => setForm((f) => ({ ...f, password: v }))}
-            placeholder={editingUser ? "(залиш порожнім щоб не змінювати)" : ""}
+            placeholder={editingUser ? t("common.leave_blank") : ""}
             required={!editingUser}
           />
           <FormField
@@ -330,7 +347,7 @@ export default function UsersPage() {
             options={roleOptions}
           />
           <FormField
-            label={i18n.language === "uk" ? "Склад" : "Warehouse"}
+            label={t("common.warehouse")}
             value={form.warehouse_id}
             onChange={(v) => setForm((f) => ({ ...f, warehouse_id: v }))}
             options={warehouseOptions}
@@ -358,6 +375,10 @@ export default function UsersPage() {
             <strong>{confirmDelete.full_name}</strong>?
           </p>
         </Modal>
+      )}
+
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={hideToast} />
       )}
     </div>
   );

@@ -11,6 +11,7 @@ import Table from "../../components/Table";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
 import FormField from "../../components/FormField";
+import { Toast, useToast } from "../../components/Toast";
 
 interface WarehouseForm {
   name: string;
@@ -49,11 +50,14 @@ export default function WarehousesPage() {
   const [form, setForm] = useState<WarehouseForm>(emptyForm);
   const [confirmDelete, setConfirmDelete] = useState<Warehouse | null>(null);
   const [saving, setSaving] = useState(false);
+  const { toast, showToast, hideToast } = useToast();
 
   const load = async () => {
     setLoading(true);
     try {
       setWarehouses(await getAllWarehouses());
+    } catch {
+      showToast(t("common.load_error"), "error");
     } finally {
       setLoading(false);
     }
@@ -68,6 +72,7 @@ export default function WarehousesPage() {
     setForm(emptyForm);
     setShowModal(true);
   };
+
   const openEdit = (w: Warehouse) => {
     setEditingWarehouse(w);
     setForm({ name: w.name, location: w.location, status: w.status });
@@ -88,8 +93,11 @@ export default function WarehousesPage() {
           status: form.status as "ACTIVE" | "INACTIVE",
         });
       }
+      showToast(t("common.save_success"), "success");
       setShowModal(false);
       await load();
+    } catch {
+      showToast(t("common.save_error"), "error");
     } finally {
       setSaving(false);
     }
@@ -97,9 +105,14 @@ export default function WarehousesPage() {
 
   const handleDelete = async () => {
     if (!confirmDelete) return;
-    await deleteWarehouse(confirmDelete.warehouse_id);
-    setConfirmDelete(null);
-    await load();
+    try {
+      await deleteWarehouse(confirmDelete.warehouse_id);
+      showToast(t("common.delete_success"), "success");
+      setConfirmDelete(null);
+      await load();
+    } catch {
+      showToast(t("common.delete_error"), "error");
+    }
   };
 
   const filtered = warehouses.filter(
@@ -249,6 +262,10 @@ export default function WarehousesPage() {
             {t("common.confirm_delete")} <strong>{confirmDelete.name}</strong>?
           </p>
         </Modal>
+      )}
+
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={hideToast} />
       )}
     </div>
   );

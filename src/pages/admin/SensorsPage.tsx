@@ -12,6 +12,7 @@ import Table from "../../components/Table";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
 import FormField from "../../components/FormField";
+import { Toast, useToast } from "../../components/Toast";
 
 interface SensorForm {
   serial_number: string;
@@ -26,6 +27,7 @@ const emptyForm: SensorForm = {
   warehouse_id: "",
   is_active: true,
 };
+
 const iconBtn: React.CSSProperties = {
   width: 30,
   height: 30,
@@ -41,6 +43,7 @@ const iconBtn: React.CSSProperties = {
 
 export default function SensorsPage() {
   const { t } = useTranslation();
+  const { toast, showToast, hideToast } = useToast();
   const [sensors, setSensors] = useState<Sensor[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,6 +60,8 @@ export default function SensorsPage() {
       const [s, w] = await Promise.all([getAllSensors(), getAllWarehouses()]);
       setSensors(s);
       setWarehouses(w);
+    } catch {
+      showToast(t("common.load_error"), "error");
     } finally {
       setLoading(false);
     }
@@ -71,6 +76,7 @@ export default function SensorsPage() {
     setForm(emptyForm);
     setShowModal(true);
   };
+
   const openEdit = (s: Sensor) => {
     setEditingSensor(s);
     setForm({
@@ -96,8 +102,11 @@ export default function SensorsPage() {
       } else {
         await createSensor(payload);
       }
+      showToast(t("common.save_success"), "success");
       setShowModal(false);
       await load();
+    } catch {
+      showToast(t("common.save_error"), "error");
     } finally {
       setSaving(false);
     }
@@ -105,9 +114,14 @@ export default function SensorsPage() {
 
   const handleDelete = async () => {
     if (!confirmDelete) return;
-    await deleteSensor(confirmDelete.sensor_id);
-    setConfirmDelete(null);
-    await load();
+    try {
+      await deleteSensor(confirmDelete.sensor_id);
+      showToast(t("common.delete_success"), "success");
+      setConfirmDelete(null);
+      await load();
+    } catch {
+      showToast(t("common.delete_error"), "error");
+    }
   };
 
   const getWarehouseName = (id: number) =>
@@ -125,7 +139,7 @@ export default function SensorsPage() {
   ];
 
   const columns = [
-    { key: "sensor_id", label: t("ID") },
+    { key: "sensor_id", label: "ID" },
     { key: "serial_number", label: t("sensor.serial") },
     { key: "type", label: t("sensor.type") },
     {
@@ -266,6 +280,10 @@ export default function SensorsPage() {
             <strong>{confirmDelete.serial_number}</strong>?
           </p>
         </Modal>
+      )}
+
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={hideToast} />
       )}
     </div>
   );
