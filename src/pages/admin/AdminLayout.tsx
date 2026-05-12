@@ -7,6 +7,7 @@ import UsersPage from "./UsersPage";
 import SensorsPage from "./SensorsPage";
 import ThresholdsPage from "./ThresholdsPage";
 import AuditPage from "./AuditPage";
+import BackupPage from "./BackupPage";
 
 const adminNavItems: NavItem[] = [
   { key: "users", label: "", icon: "👥" },
@@ -14,6 +15,7 @@ const adminNavItems: NavItem[] = [
   { key: "thresholds", label: "", icon: "⚙️" },
   { key: "divider", label: "", icon: "" },
   { key: "audit", label: "", icon: "📋" },
+  { key: "backup", label: "", icon: "💾" },
 ];
 
 export default function AdminLayout() {
@@ -37,6 +39,8 @@ export default function AdminLayout() {
         return <ThresholdsPage />;
       case "audit":
         return <AuditPage />;
+      case "backup":
+        return <BackupPage />;
       default:
         return <UsersPage />;
     }

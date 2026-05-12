@@ -76,11 +76,11 @@ export const updateUser = async (
     warehouse_id?: number | null;
   },
 ): Promise<User> => {
-  const res = await client.put<User>(`/users/${id}`, {
+  const res = await client.put<UserResponse>(`/users/${id}`, {
     ...data,
     ...(data.role ? { role: toBackendRole(data.role) } : {}),
   });
-  return res.data;
+  return normalizeUser(res.data);
 };
 
 export const blockUser = async (id: number): Promise<void> => {

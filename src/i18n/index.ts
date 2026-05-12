@@ -34,6 +34,7 @@ const resources = {
         serial_number: "Серійний номер",
         entity: "Сутність",
         action: "Дія",
+        backup: "Резервні копії",
       },
       common: {
         save: "Зберегти",
@@ -158,6 +159,26 @@ const resources = {
         filter_entity: "Сутність (users, sensors...)",
         filter_action: "Дія (create, update, delete...)",
       },
+      backup: {
+        full_backup_title: "Повна резервна копія",
+        full_backup_desc:
+          "Завантажує всі дані системи у JSON-файл: користувачів, склади, датчики, порогові значення, тривоги, партії меду та журнал подій.",
+        create_backup: "Створити резервну копію",
+        backup_success: "Резервну копію збережено",
+        backup_error: "Помилка створення резервної копії",
+        export_title: "Експорт налаштувань",
+        export_desc:
+          "Завантажує поточні налаштування системи: склади, датчики та порогові значення.",
+        export_settings: "Експортувати налаштування",
+        export_success: "Налаштування експортовано",
+        export_error: "Помилка експорту",
+        import_title: "Імпорт даних",
+        import_desc:
+          "Завантажте JSON-файл резервної копії або налаштувань для перегляду його вмісту.",
+        choose_file: "Вибрати файл",
+        import_success: "Файл успішно прочитано",
+        import_error: "Помилка читання файлу",
+      },
     },
   },
   en: {
@@ -181,6 +202,7 @@ const resources = {
         audit: "Audit Log",
         reports: "Reports",
         logout: "Sign out",
+        backup: "Backup",
       },
       common: {
         save: "Save",
@@ -306,6 +328,26 @@ const resources = {
       audit: {
         filter_entity: "Entity (users, sensors...)",
         filter_action: "Action (create, update, delete...)",
+      },
+      backup: {
+        full_backup_title: "Full Backup",
+        full_backup_desc:
+          "Downloads all system data as a JSON file: users, warehouses, sensors, thresholds, alerts, honey batches and audit log.",
+        create_backup: "Create backup",
+        backup_success: "Backup saved",
+        backup_error: "Backup failed",
+        export_title: "Export Settings",
+        export_desc:
+          "Downloads current system settings: warehouses, sensors and thresholds.",
+        export_settings: "Export settings",
+        export_success: "Settings exported",
+        export_error: "Export failed",
+        import_title: "Import Data",
+        import_desc:
+          "Upload a JSON backup or settings file to preview its contents.",
+        choose_file: "Choose file",
+        import_success: "File read successfully",
+        import_error: "Failed to read file",
       },
     },
   },
